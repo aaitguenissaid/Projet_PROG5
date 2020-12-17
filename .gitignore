@@ -1,3 +1,4 @@
+#fichiers et dossiers générés par ./configure
 .deps/
 Examples/.deps/
 Examples/Makefile
@@ -6,4 +7,15 @@ config.h
 config.log
 config.status
 stamp-h1
+
+#fichiers et dossiers générés par make
+arm_simulator
+memory_test
+send_irq
+
+# Object files
+*.o
+
+#program examples	
+Examples/example?
 
