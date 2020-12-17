@@ -1,0 +1,9 @@
+.deps/
+Examples/.deps/
+Examples/Makefile
+Makefile
+config.h
+config.log
+config.status
+stamp-h1
+
