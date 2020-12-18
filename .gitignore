@@ -14,12 +14,12 @@ arm_simulator
 memory_test
 send_irq
 Examples/insertion_sort
-
+config.h.in~
 
 # Object files
 *.o
 
-#program examples	
+#program examples
 Examples/example?
 
 #autoreconf

@@ -1,45 +1,150 @@
 /*
-Armator - simulateur de jeu d'instruction ARMv5T à but pédagogique
+Armator - simulateur de jeu d'instruction ARMv5T ï¿½ but pï¿½dagogique
 Copyright (C) 2011 Guillaume Huard
 Ce programme est libre, vous pouvez le redistribuer et/ou le modifier selon les
-termes de la Licence Publique Générale GNU publiée par la Free Software
-Foundation (version 2 ou bien toute autre version ultérieure choisie par vous).
+termes de la Licence Publique Gï¿½nï¿½rale GNU publiï¿½e par la Free Software
+Foundation (version 2 ou bien toute autre version ultï¿½rieure choisie par vous).
 
-Ce programme est distribué car potentiellement utile, mais SANS AUCUNE
+Ce programme est distribuï¿½ car potentiellement utile, mais SANS AUCUNE
 GARANTIE, ni explicite ni implicite, y compris les garanties de
-commercialisation ou d'adaptation dans un but spécifique. Reportez-vous à la
-Licence Publique Générale GNU pour plus de détails.
+commercialisation ou d'adaptation dans un but spï¿½cifique. Reportez-vous ï¿½ la
+Licence Publique Gï¿½nï¿½rale GNU pour plus de dï¿½tails.
 
-Vous devez avoir reçu une copie de la Licence Publique Générale GNU en même
-temps que ce programme ; si ce n'est pas le cas, écrivez à la Free Software
+Vous devez avoir reï¿½u une copie de la Licence Publique Gï¿½nï¿½rale GNU en mï¿½me
+temps que ce programme ; si ce n'est pas le cas, ï¿½crivez ï¿½ la Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307,
-États-Unis.
+ï¿½tats-Unis.
 
 Contact: Guillaume.Huard@imag.fr
-	 Bâtiment IMAG
+	 Bï¿½timent IMAG
 	 700 avenue centrale, domaine universitaire
-	 38401 Saint Martin d'Hères
+	 38401 Saint Martin d'Hï¿½res
 */
 #ifndef __REGISTERS_H__
 #define __REGISTERS_H__
 #include <stdint.h>
 
+
 typedef struct registers_data *registers;
 
+
+/*
+   registers_create
+   description : allocation des registres.
+   parametres :
+   valeur de retour : structure de registres , NULL sinon.
+   effets de bord : alloue l'espace les registres.
+*/
 registers registers_create();
+
+/*
+   registers_destroy
+   description : destruction des registres.
+   parametres : registres r.
+   valeur de retour :
+   effets de bord : les registres sont detruit.
+*/
 void registers_destroy(registers r);
 
+
+/*
+   get_mode
+   description : renvoies le mode M[4,0] de CPSR.
+   parametres : registres r.
+   valeur de retour : le mode du processeur.
+   effets de bord :
+*/
 uint8_t get_mode(registers r);
+
+/*
+   current_mode_has_spsr
+   description : verifie si le mode actuel utilise SPSR.
+   parametres : registres r.
+   valeur de retour : 1 si on a SPSR, 0 sinon.
+   effets de bord :
+*/
 int current_mode_has_spsr(registers r);
+
+/*
+   in_a_privileged_mode
+   description : verifie si le mode est privilÃ©giÃ©.
+   parametres : registres r.
+   valeur de retour : renvoies 1 si le mode est privilÃ©gier, 0 sinon.
+   effets de bord :
+*/
 int in_a_privileged_mode(registers r);
 
+
+/*
+   read_register
+   description : lecture d'un registre.
+   parametres : registres r et l'adresse du registre.
+   valeur de retour : la valeur du registre.
+   effets de bord :
+*/
 uint32_t read_register(registers r, uint8_t reg);
+
+/*
+   read_usr_register
+   description : lecture du registre reg_usr.
+   parametres : registres r et l'adresse du registre.
+   valeur de retour : la valeur du registre user.
+   effets de bord :
+*/
 uint32_t read_usr_register(registers r, uint8_t reg);
+
+/*
+   read_cpsr
+   description : lecture du registre CPSR.
+   parametres : registres r et l'adresse du registre.
+   valeur de retour : la valeur du registre CPSR.
+   effets de bord :
+*/
 uint32_t read_cpsr(registers r);
+
+/*
+   read_spsr
+   description : lecture du registre SPSR.
+   parametres : registres r et l'adresse du registre.
+   valeur de retour : la valeur du registre SPSR.
+   effets de bord :
+*/
 uint32_t read_spsr(registers r);
+
+/*
+   write_register
+   description : ecrit la valeur value dans le registre reg.
+   parametres : registers r, l'adresse reg, la valeur value.
+   valeur de retour :
+   effets de bord : modifie la valeur du registre.
+*/
 void write_register(registers r, uint8_t reg, uint32_t value);
+
+/*
+   write_register
+   description : ecrit la valeur value dans le registre reg_usr
+   parametres : registers r, l'adresse reg, la valeur value.
+   valeur de retour :
+   effets de bord : modifie la valeur du registre user.
+*/
 void write_usr_register(registers r, uint8_t reg, uint32_t value);
+
+/*
+   write_register
+   description : ecrit la valeur value dans le registre CPSR.
+   parametres : registers r, la valeur value.
+   valeur de retour :
+   effets de bord : modifie la valeur du registre CPSR.
+*/
 void write_cpsr(registers r, uint32_t value);
+
+/*
+   write_register
+   description : ecrit la valeur value dans le registre SPSR.
+   parametres : registers r, la valeur value.
+   valeur de retour :
+   effets de bord : modifie la valeur du registre SPSR.
+*/
 void write_spsr(registers r, uint32_t value);
 
 #endif
