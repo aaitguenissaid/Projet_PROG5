@@ -29,7 +29,7 @@ typedef struct memory_data *memory;
 
 /*
    memory_create
-   description : la memoire est crée avec une taille size et un boutisme is_big_endian.
+   description : la memoire est crée avec une taille en octet size et un boutisme is_big_endian.
    parametres : la taille et le boutisme.
    valeur de retour : la memoire si succes ou NULL sinon
    effets de bord : alloue de la memoire

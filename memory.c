@@ -43,7 +43,6 @@ memory memory_create(size_t size, int is_big_endian) {
 
 size_t memory_get_size(memory mem) {
     return mem->size;
-    return 0;
 }
 
 void memory_destroy(memory mem) {
@@ -52,25 +51,37 @@ void memory_destroy(memory mem) {
 }
 
 int memory_read_byte(memory mem, uint32_t address, uint8_t *value) {
-    *value = *(mem->donnees + address);
-    if (*value)
-      return 0;
-    else
+    if (address<0 || address > (mem->size))
       return -1;
+
+    *value = *(mem->donnees + address);
+    return 0;
 }
 
 int memory_read_half(memory mem, uint32_t address, uint16_t *value) {
-    if(mem->endian){
-      *value = (*(mem->donnees + address + 0))<< 8 | (*(mem->donnees + address +1));
-    } else {
-      *value = (*(mem->donnees + address + 1))<< 8 | (*(mem->donnees + address +0));   }
-    if (*value)
-      return 0;
-    else
+    if (address<0 || address > (mem->size))
       return -1;
+    // first version
+    // if(mem->endian){
+    //   *value = (*(mem->donnees + address + 0))<< 8 | (*(mem->donnees + address +1));
+    // } else {
+    //   *value = (*(mem->donnees + address + 1))<< 8 | (*(mem->donnees + address +0));
+    // }
+
+    // memory_read_byte(mem, address+0, ((uint8_t*)(value))+1);
+    // memory_read_byte(mem, address+8, ((uint8_t*)(value))+0);
+
+    *value = (*(mem->donnees + address + 0))<< 8 | (*(mem->donnees + address +1));
+    if(!mem->endian)
+      *value = reverse_2(*value);
+
+    return 0;
 }
 
 int memory_read_word(memory mem, uint32_t address, uint32_t *value) {
+    if (address<0 || address > (mem->size))
+      return -1;
+    /*
     if(mem->endian){
         *value = ((uint32_t)(*(mem->donnees + address + 0)))<< 24 | ((uint32_t)(*(mem->donnees + address + 1)))<< 16 \
         | ((uint32_t)(*(mem->donnees + address + 2)))<< 8 | ((uint32_t)(*(mem->donnees + address + 3)))<< 0;
@@ -79,48 +90,77 @@ int memory_read_word(memory mem, uint32_t address, uint32_t *value) {
         *value = ((uint32_t)(*(mem->donnees + address + 3)))<< 24 | ((uint32_t)(*(mem->donnees + address + 2)))<< 16 \
         | ((uint32_t)(*(mem->donnees + address + 1)))<< 8 | ((uint32_t)(*(mem->donnees + address + 0)))<< 0;
        }
-    if (*value)
-      return 0;
-    else
-      return -1;
+    */
+
+    *value = ((uint32_t)(*(mem->donnees + address + 0)))<< 24 | ((uint32_t)(*(mem->donnees + address + 1)))<< 16 \
+    | ((uint32_t)(*(mem->donnees + address + 2)))<< 8 | ((uint32_t)(*(mem->donnees + address + 3)))<< 0;
+
+    if(!mem->endian)
+      *value = reverse_4(*value);
+
+    return 0;
+
 }
 
 int memory_write_byte(memory mem, uint32_t address, uint8_t value) {
-    *(mem->donnees + address) = value;
-    if (*(mem->donnees + address))
-      return 0;
-    else
+    if (address<0 || address > (mem->size))
       return -1;
+
+    *(mem->donnees + address) = value;
+
+    return 0;
 }
 
 int memory_write_half(memory mem, uint32_t address, uint16_t value) {
-  if(mem->endian){
-      *(mem->donnees + address + 1) = value & 0XFF;
-      *(mem->donnees + address + 0) = (value >> 8) & 0XFF;
-  } else {
-      *(mem->donnees + address + 0) = value & 0XFF;
-      *(mem->donnees + address + 1) = (value >> 8) & 0XFF;
-  }
-  if (*(mem->donnees + address))
-      return 0;
-  else
-      return -1;
+  if (address<0 || address > (mem->size))
+    return -1;
+
+  // if(mem->endian){
+  //     *(mem->donnees + address + 1) = value & 0XFF;
+  //     *(mem->donnees + address + 0) = (value >> 8) & 0XFF;
+  // } else {
+  //     *(mem->donnees + address + 0) = value & 0XFF;
+  //     *(mem->donnees + address + 1) = (value >> 8) & 0XFF;
+  // }
+
+  if(!mem->endian)
+    value = reverse_2(value);
+  *(mem->donnees + address + 1) = value & 0XFF;
+  *(mem->donnees + address + 0) = (value >> 8) & 0XFF;
+
+  // *(mem->donnees + address + 1) = value & 0XFF;
+  // *(mem->donnees + address + 0) = (value >> 8) & 0XFF;
+  //
+  // if(!mem->endian)
+  //   *(mem->donnees + address + 0) = reverse_2(*(mem->donnees + address + 0));
+
+
+  return 0;
 }
 
 int memory_write_word(memory mem, uint32_t address, uint32_t value) {
-  if(mem->endian){
-      *(mem->donnees + address + 0) = (uint8_t) ((value >> 24) & 0XFF);
-      *(mem->donnees + address + 1) = (uint8_t) ((value >> 16) & 0XFF);
-      *(mem->donnees + address + 2) = (uint8_t) ((value >> 8) & 0XFF);
-      *(mem->donnees + address + 3) = (uint8_t) ((value >> 0) & 0XFF);
-  } else {
-      *(mem->donnees + address + 0) = (uint8_t) ((value >> 0) & 0XFF);
-      *(mem->donnees + address + 1) = (uint8_t) ((value >> 8) & 0XFF);
-      *(mem->donnees + address + 2) = (uint8_t) ((value >> 16) & 0XFF);
-      *(mem->donnees + address + 3) = (uint8_t) ((value >> 24) & 0XFF);
-       }
-  if (*(mem->donnees + address))
-      return 0;
-  else
-      return -1;
+  if (address<0 || address > (mem->size))
+    return -1;
+
+  if(!mem->endian)
+    value = reverse_4(value);
+
+  *(mem->donnees + address + 0) = (uint8_t) ((value >> 24) & 0XFF);
+  *(mem->donnees + address + 1) = (uint8_t) ((value >> 16) & 0XFF);
+  *(mem->donnees + address + 2) = (uint8_t) ((value >> 8) & 0XFF);
+  *(mem->donnees + address + 3) = (uint8_t) ((value >> 0) & 0XFF);
+
+  // if(mem->endian){
+  //     *(mem->donnees + address + 0) = (uint8_t) ((value >> 24) & 0XFF);
+  //     *(mem->donnees + address + 1) = (uint8_t) ((value >> 16) & 0XFF);
+  //     *(mem->donnees + address + 2) = (uint8_t) ((value >> 8) & 0XFF);
+  //     *(mem->donnees + address + 3) = (uint8_t) ((value >> 0) & 0XFF);
+  // } else {
+  //     *(mem->donnees + address + 0) = (uint8_t) ((value >> 0) & 0XFF);
+  //     *(mem->donnees + address + 1) = (uint8_t) ((value >> 8) & 0XFF);
+  //     *(mem->donnees + address + 2) = (uint8_t) ((value >> 16) & 0XFF);
+  //     *(mem->donnees + address + 3) = (uint8_t) ((value >> 24) & 0XFF);
+  // }
+
+  return 0;
 }
