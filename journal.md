@@ -1,17 +1,17 @@
-#Journal de bord
+# Journal de bord
 
-##Projet PROG5 - développement d'un simulateur ARMv5
+## Projet PROG5 - développement d'un simulateur ARMv5
 
-###Membres du groupe
+### Membres du groupe
 
-*_Abderrahmane Ait gueni ssaid_
-*_Jizong Zhan_
-*_Sidorets Kirill_
-*_Ningyu LI_
-*_Jinniu Wang_
-*_Josquin Imbert_
+* _Abderrahmane Ait gueni ssaid_
+* _Jizong Zhan_
+* _Sidorets Kirill_
+* _Ningyu LI_
+* _Jinniu Wang_
+* _Josquin Imbert_
 
-###Journal
+### Journal
 
 17/12/2020 : Prise en main du sujet
 
