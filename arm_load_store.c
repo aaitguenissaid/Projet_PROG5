@@ -27,14 +27,45 @@ Contact: Guillaume.Huard@imag.fr
 #include "debug.h"
 
 int arm_load_store(arm_core p, uint32_t ins) {
+	if(((ins>>27)&0x01==0X00)&&((ins>>26)&0x01==0x01)){
+		if ((ins>>22)&0x01==0x00){
+			if((ins>>20)&0x01==0x01){
+				//LDR
+			}else{ // donc ((ins>>20)&0x01==0x00) 
+				//STR
+			}
+		}else { //donc ((ins>>20)&0x01==0x01)
+			if((ins>>20)&0x01==0x01){
+				//LDRB
+			}else { // donc ((ins>>20)&0x01==0x00) 
+				//STRB
+			}
+		}
+	}else if(((ins>>27)&0x01==0X00)&&((ins>>26)&0x01==0x00)&&((ins>>25)&0x01==0x00)&&((ins>>4)&0x0F==0x0B)){
+		if((ins>>20)&0x01==0x01){
+				//LDRH
+			}else { // donc ((ins>>20)&0x01==0x00) 
+				//STRH
+			}
+	}
     return UNDEFINED_INSTRUCTION;
 }
 
 int arm_load_store_multiple(arm_core p, uint32_t ins) {
+	if(((ins>>27)&0x01==0X01)&&((ins>>26)&0x01==0x00)&&((ins>>25)&0x01==0x00)){
+		if((ins>>20)&0x01==0x01){
+				//LDM
+			}else { // donc ((ins>>20)&0x01==0x00) 
+				//STM
+			}	
+	}
     return UNDEFINED_INSTRUCTION;
 }
 
 int arm_coprocessor_load_store(arm_core p, uint32_t ins) {
-    /* Not implemented */
-    return UNDEFINED_INSTRUCTION;
+    if((ins>>27)&0x01)
+    	return arm_load_store_multiple(p,ins);
+    else
+		return arm_load_store(p,ins);
+ 
 }
