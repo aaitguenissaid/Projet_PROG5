@@ -15,8 +15,10 @@
 
 17/12/2020 : Prise en main du sujet
 
-18/12/2020 : Rédaction des spécifications pour les structures "mémoire" et "registers"
+18/12/2020 : Rédaction des spécifications pour les structures "memory" et "registers"
 
-04/01/2021 : Développement de la structure "mémoire" en équipe
+04/01/2021 : Développement de la structure "memory" en équipe
 
-05/01/2021 : Développement de différentes versions de la structure "registers" en équipe, choix d'une version
+05/01/2021 : Développement de différentes versions de la structure "registers" en équipe, choix d'une version, répartition des tâches suivantes (cf Kanban)
+
+06/01/2021 : Analyse de la documentation pour comprendre les instructions et le travail à faire. Spécification des fichiers d'en-tête nous concernant.
