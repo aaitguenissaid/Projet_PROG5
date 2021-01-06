@@ -25,14 +25,109 @@ Contact: Guillaume.Huard@imag.fr
 #include "arm_constants.h"
 #include "util.h"
 #include "debug.h"
+typedef enum NomsDeFunc { LDR, LDRB, LDRH, STR, STRB, STRH, LDM, STM}
 
-int ConditionPassed(arm_core p,uint32_t ins){
-	uint8_t cond = ins>>28 & 0x0f;
+uint32_t get_adres(arm_core p,uint32_t ins){
+	if ((get_bits(ins,27, 24) == 0x5) && (get_bit(ins, 21) == 0)){
+		//Load and Store Word or Unsigned Byte - Immediate offset
+    	if(get_bit(ins, 23) == 1){
+        	return arm_read_register(p,(uint8_t) get_bits(ins, 19, 16)) + (uint32_t) get_bits(ins, 11, 0);
+    	}else {
+        	return arm_read_register(p,(uint8_t) get_bits(ins, 19, 16)) - (uint32_t) get_bits(ins, 11, 0);
+    	}     
+	}else if ((get_bits(ins,27,24)==0x07)&&!get_bit(ins,21)&&(get_bits(ins,11,4)==0x00)){
+		//Load and Store Word or Unsigned Byte - Register offset
+		if(get_bit(ins,23)){	
+			return arm_read_register(p,(uint8_t) get_bits(ins,19,16)) + arm_read_register(p,(uint8_t) get_bits(ins,3,0));
+		}else{
+			return arm_read_register(p,(uint8_t) get_bits(ins,19,16)) - arm_read_register(p,(uint8_t) get_bits(ins,3,0));
+		}
+	}else if ((get_bits(ins,27,24)==0x05)&&get_bit(ins,21)){
+		//Load and Store Word or Unsigned Byte - Immediate pre-indexed
+		uint32_t address;
+		if(get_bit(ins,23)){	
+			address =  arm_read_register(p,(uint8_t) get_bits(ins, 19, 16)) + (uint32_t) get_bits(ins, 11, 0);
+    	}else {
+        	address = arm_read_register(p,(uint8_t) get_bits(ins, 19, 16)) - (uint32_t) get_bits(ins, 11, 0);
+    	}  
+		if ConditionPassed(p,ins){
+			arm_write_register(p,(uint8_t) get_bits(ins, 19, 16),address);
+		}
+		return address;
+	}else if ((get_bits(ins,27,24)==0x07)&&get_bit(ins,21)&&(get_bits(ins,11,4)==0x00)){
+		//Load and Store Word or Unsigned Byte - Register pre-indexed
+		uint32_t address;
+		if(get_bit(ins,23)){	
+			address =  arm_read_register(p,(uint8_t) get_bits(ins,19,16)) + arm_read_register(p,(uint8_t) get_bits(ins,3,0));
+    	}else {
+        	address = arm_read_register(p,(uint8_t) get_bits(ins,19,16)) - arm_read_register(p,(uint8_t) get_bits(ins,3,0));
+    	}  
+		if ConditionPassed(p,ins){
+			arm_write_register(p,(uint8_t) get_bits(ins, 19, 16),address);
+		}
+		return address;
+	}else if ((get_bits(ins,27,24)==0x04)&&!get_bit(ins,21)){
+		//Load and Store Word or Unsigned Byte - Immediate post-indexed
+		if ConditionPassed(p,ins){
+			if(get_bit(ins, 23) == 1){
+	        	return arm_read_register(p,(uint8_t) get_bits(ins, 19, 16)) + (uint32_t) get_bits(ins, 11, 0);
+	    	}else {
+	        	return arm_read_register(p,(uint8_t) get_bits(ins, 19, 16)) - (uint32_t) get_bits(ins, 11, 0);
+	    	} 
+		}
+	} else if ((get_bits(ins,27,24)==0x06)&&!get_bit(ins,21)&&(get_bits(ins,11,4)==0x00)){
+		//Load and Store Word or Unsigned Byte - Register post-indexed
+		if ConditionPassed(p,ins){
+			if(get_bit(ins,23)){	
+				return arm_read_register(p,(uint8_t) get_bits(ins,19,16)) + arm_read_register(p,(uint8_t) get_bits(ins,3,0));
+			}else{
+				return arm_read_register(p,(uint8_t) get_bits(ins,19,16)) - arm_read_register(p,(uint8_t) get_bits(ins,3,0));
+			}
+		}
+	}else/*Addressing Mode 3 - Miscellaneous Loads and Stores*/ 
+		if((get_bits(ins,27,24)==0x01)&&(get_bits(ins,22,21)==0x02)&&get_bit(ins,7)&&get_bit(ins,4)){
+			// ??? Miscellaneous Loads and Stores - Immediate offset
+			uint32_t offset_8 = 0x00;
+			offset_8 = (uint32_t) ((get_bits(ins,11,8)<<4)|get_bits(ins,3,0));
+			if(get_bit(ins, 23) == 1){
+				return arm_read_register(p,(uint8_t) get_bits(ins, 19, 16)) +  offset_8
+			}else{
+				return arm_read_register(p,(uint8_t) get_bits(ins, 19, 16)) -  offset_8
+			}
+		}
+}
+
+NomsDeFunc get_func(uint32_t ins){
+	if(!get_bit(ins,27)&&get_bit(ins,26)){
+		if (!get_bit(ins,22)){
+			if(get_bit(ins,20)){
+				return LDR;
+			}else{ // donc !get_bit(ins,20)
+				return STR;
+			}
+		}else { //donc get_bit(ins,22)
+			if(get_bit(ins,20)){
+				return LDRB;
+			}else { // donc !get_bit(ins,20) 
+				return STRB;
+			}
+		}
+	}else if(!get_bit(ins,27)&&!get_bit(ins,26)&&!get_bit(ins,25)&&(get_bits(ins,7,4)==0x0B)){
+		if(get_bit(ins,20)){
+				return LDRH;
+			}else { // donc !get_bit(ins,20) 
+				return STRH;
+			}
+	}
+}
+
+int ConditionPassed (arm_core p,uint32_t ins){
+	uint8_t cond = get_bits(ins,31,28);
 	uint8_t cpsr = arm_read_cpsr(p);
-	uint8_t n = cpsr>>31 & 0x01;
-	uint8_t z = cpsr>>30 & 0x01;
-	uint8_t c = cpsr>>29 & 0x01;
-	uint8_t v = cpsr>>28 & 0x01;
+	uint8_t n = get_bit(cpsr,31);
+	uint8_t z = get_bit(cpsr,30);
+	uint8_t c = get_bit(cpsr,29);
+	uint8_t v = get_bit(cpsr,28);
 	switch(cond){
 		case 0x00: return z==0x01;				//0000  EQ       Equal                               Z set
 		case 0x01: return z==0x00;				//0001  NE       Not equal                           Z clear
@@ -54,123 +149,24 @@ int ConditionPassed(arm_core p,uint32_t ins){
 	}
 }
 int arm_load_store(arm_core p, uint32_t ins) {
-	if(((ins>>27)&0x01==0X00)&&((ins>>26)&0x01==0x01)){
-		if ((ins>>22)&0x01==0x00){
-			if((ins>>20)&0x01==0x01){
-				/* 			LDR 
-				MemoryAccess(B-bit, E-bit)
-				if ConditionPassed(cond) then
-					if (CP15_reg1_Ubit == 0) then
-						data = Memory[address,4] Rotate_Right (8 * address[1:0])
-					else    / CP15_reg_Ubit == 1 /
-						data = Memory[address,4]
-					if (Rd is R15) then
-						if (ARMv5 or above) then
-							PC = data AND 0xFFFFFFFE
-							T Bit = data[0]
-						else
-							PC = data AND 0xFFFFFFFC
-					else
-						Rd = data
-				*/
-				if (ConditionPassed(p,ins)){
-					
-				}
-			}else{ // donc ((ins>>20)&0x01==0x00) 
-				/*           STR
-				MemoryAccess(B-bit, E-bit)
-				processor_id = ExecutingProcessor()
-				if ConditionPassed(cond) then
-					Memory[address,4] = Rd
-					if Shared(address) then    / from ARMv6 /
-						physical_address = TLB(address)
-						ClearExclusiveByAddress(physical_address,processor_id,4)
-						/ See Summary of operation on page A2-49 /
-				*/
-				if (ConditionPassed(p,ins)){
-					
-				}
-			}
-		}else { //donc ((ins>>20)&0x01==0x01)
-			if((ins>>20)&0x01==0x01){
-				/*			LDRB
-				MemoryAccess(B-bit, E-bit)
-				if ConditionPassed(cond) then
-					Rd = Memory[address,1]
-				*/
-				if (ConditionPassed(p,ins)){
-					
-				}
-			}else { // donc ((ins>>20)&0x01==0x00) 
-				/*           STRB
-				processor_id = ExecutingProcessor()
-				if ConditionPassed(cond) then
-					Memory[address,1] = Rd[7:0]
-					if Shared(address) then      / from ARMv6 /
-						physical_address = TLB(address)
-						ClearExclusiveByAddress(physical_address,processor_id,1)
-						/ See Summary of operation on page A2-49 /
-				*/
-				if (ConditionPassed(p,ins)){
-					
-				}
-			}
-		}
-	}else if(((ins>>27)&0x01==0X00)&&((ins>>26)&0x01==0x00)&&((ins>>25)&0x01==0x00)&&((ins>>4)&0x0F==0x0B)){
-		if((ins>>20)&0x01==0x01){
-				/*			LDRH
-				MemoryAccess(B-bit, E-bit)
-				if ConditionPassed(cond) then
-					if (CP15_reg1_Ubit == 0) then
-						if address[0] == 0 then
-							data = Memory[address,2]
-						else
-							data = UNPREDICTABLE
-					else    / CP15_reg1_Ubit == 1 /
-						data = Memory[address,2]
-					Rd = ZeroExtend(data[15:0])
-				*/
-				if (ConditionPassed(p,ins)){
-					
-				}
-			}else { // donc ((ins>>20)&0x01==0x00) 
-				/*           STRH 
-				MemoryAccess(B-bit, E-bit)
-				processor_id = ExecutingProcessor()
-				if ConditionPassed(cond) then
-					if (CP15_reg1_Ubit == 0) then
-						if address[0] == 0b0 then
-							Memory[address,2] = Rd[15:0]
-						else
-							Memory[address,2] = UNPREDICTABLE
-					else    / CP15_reg1_Ubit ==1  /
-						Memory[address,2] = Rd[15:0]
-					if Shared(address) then    / ARMv6 /
-						physical_address = TLB(address)
-						ClearExclusiveByAddress(physical_address,processor_id,2)
-						/ See Summary of operation on page A2-49 /
-				*/
-				if (ConditionPassed(p,ins)){
-					
-				}
-			}
+	NomsDeFunc name = get_func(ins);
+	switch (name){
+		case LDR : break;
+		case STR : break;
+		case LDRB : break;
+		case STRB : break;
+		case LDRH : break;
+		case STRH : break;
+		default: return UNDEFINED_INSTRUCTION;
 	}
     return UNDEFINED_INSTRUCTION;
 }
-
-int arm_load_store_multiple(arm_core p, uint32_t ins) {
-	if(((ins>>27)&0x01==0X01)&&((ins>>26)&0x01==0x00)&&((ins>>25)&0x01==0x00)){
-		if((ins>>20)&0x01==0x01){
-				//LDM
-			}else { // donc ((ins>>20)&0x01==0x00) 
-				//STM
-			}	
-	}
-    return UNDEFINED_INSTRUCTION;
+int arm_load_store_multiple(arm_core p, uint32_t ins){
+	
+	return UNDEFINED_INSTRUCTION;	
 }
-
 int arm_coprocessor_load_store(arm_core p, uint32_t ins) {
-    if((ins>>27)&0x01)
+    if(get_bit(ins,27))
     	return arm_load_store_multiple(p,ins);
     else
 		return arm_load_store(p,ins);
