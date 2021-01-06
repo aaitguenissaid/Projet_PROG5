@@ -1,24 +1,24 @@
 /*
-Armator - simulateur de jeu d'instruction ARMv5T à but pédagogique
+Armator - simulateur de jeu d'instruction ARMv5T ï¿½ but pï¿½dagogique
 Copyright (C) 2011 Guillaume Huard
 Ce programme est libre, vous pouvez le redistribuer et/ou le modifier selon les
-termes de la Licence Publique Générale GNU publiée par la Free Software
-Foundation (version 2 ou bien toute autre version ultérieure choisie par vous).
+termes de la Licence Publique Gï¿½nï¿½rale GNU publiï¿½e par la Free Software
+Foundation (version 2 ou bien toute autre version ultï¿½rieure choisie par vous).
 
-Ce programme est distribué car potentiellement utile, mais SANS AUCUNE
+Ce programme est distribuï¿½ car potentiellement utile, mais SANS AUCUNE
 GARANTIE, ni explicite ni implicite, y compris les garanties de
-commercialisation ou d'adaptation dans un but spécifique. Reportez-vous à la
-Licence Publique Générale GNU pour plus de détails.
+commercialisation ou d'adaptation dans un but spï¿½cifique. Reportez-vous ï¿½ la
+Licence Publique Gï¿½nï¿½rale GNU pour plus de dï¿½tails.
 
-Vous devez avoir reçu une copie de la Licence Publique Générale GNU en même
-temps que ce programme ; si ce n'est pas le cas, écrivez à la Free Software
+Vous devez avoir reï¿½u une copie de la Licence Publique Gï¿½nï¿½rale GNU en mï¿½me
+temps que ce programme ; si ce n'est pas le cas, ï¿½crivez ï¿½ la Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307,
-États-Unis.
+ï¿½tats-Unis.
 
 Contact: Guillaume.Huard@imag.fr
-	 Bâtiment IMAG
+	 Bï¿½timent IMAG
 	 700 avenue centrale, domaine universitaire
-	 38401 Saint Martin d'Hères
+	 38401 Saint Martin d'Hï¿½res
 */
 #include "arm_load_store.h"
 #include "arm_exception.h"
@@ -28,74 +28,359 @@ Contact: Guillaume.Huard@imag.fr
 typedef enum NomsDeFunc { LDR, LDRB, LDRH, STR, STRB, STRH, LDM, STM}
 
 uint32_t get_adres(arm_core p,uint32_t ins){
-	if ((get_bits(ins,27, 24) == 0x5) && (get_bit(ins, 21) == 0)){
-		//Load and Store Word or Unsigned Byte - Immediate offset
-    	if(get_bit(ins, 23) == 1){
-        	return arm_read_register(p,(uint8_t) get_bits(ins, 19, 16)) + (uint32_t) get_bits(ins, 11, 0);
+	int u = get_bit(ins, 23);
+	uint32_t rm = arm_read_register(p, (u_int8_t) get_bits(ins, 3, 0));
+	uint32_t rn = arm_read_register(p, (u_int8_t) get_bits(ins, 19, 16));
+	uint32_t offset_12 = get_bits(ins, 11, 0);
+	uint8_t bits_2724 = get_bits(ins,27, 24);
+	uint8_t bits_21 = get_bit(ins, 21);
+	if ((bits_2724 == 0x5) && (bits_21 == 0)){
+		// 1.Load and Store Word or Unsigned Byte - Immediate offset
+    	if(u){
+        	return rn + offset_12;
     	}else {
-        	return arm_read_register(p,(uint8_t) get_bits(ins, 19, 16)) - (uint32_t) get_bits(ins, 11, 0);
-    	}     
-	}else if ((get_bits(ins,27,24)==0x07)&&!get_bit(ins,21)&&(get_bits(ins,11,4)==0x00)){
-		//Load and Store Word or Unsigned Byte - Register offset
-		if(get_bit(ins,23)){	
-			return arm_read_register(p,(uint8_t) get_bits(ins,19,16)) + arm_read_register(p,(uint8_t) get_bits(ins,3,0));
+        	return rn - offset_12;
+    	}
+	}
+	else if ((bits_2724==0x07) && (bits_21 == 0) && (get_bits(ins,11,4) == 0)){
+		// 2.Load and Store Word or Unsigned Byte - Register offset
+		if(u){
+			return rn + rm;
 		}else{
-			return arm_read_register(p,(uint8_t) get_bits(ins,19,16)) - arm_read_register(p,(uint8_t) get_bits(ins,3,0));
+			return rn - rm;
 		}
-	}else if ((get_bits(ins,27,24)==0x05)&&get_bit(ins,21)){
-		//Load and Store Word or Unsigned Byte - Immediate pre-indexed
+	}
+	else if ((bits_2724 == 0x7) && (bits_21 == 0) && (get_bit(ins, 4) == 0)){
+   		// 3.Load and Store Word or Unsigned Byte - Scaled register offset
+		uint8_t shift_imm = get_bits(ins, 11, 7);
+	    uint8_t shift_ind = get_bits(ins, 6, 5);
+	    uint32_t index;
+	    switch (shift_ind)
+	        {
+			case 0:
+			    index = rm << shift_imm;
+			    break;
+			case 1:
+			    if (shift_imm == 0)
+			        index = 0;
+			    else
+			        index = rm >> shift_imm;
+				break;
+	        case 2:
+			{
+			    if (shift_imm == 0){
+			        if (get_bit(rm, 31) == 1){
+						index = 0xFFFFFFFF;
+					} else{
+						index = 0; 
+					}						
+			    }			
+			    else
+			    {
+			    	if (rm >= 0){
+						index = rm >> shift_imm;
+					} else {   
+						uint32_t masque = ((0xFFFFFFFF >> (32-shift_imm)) << (32-shift_imm));
+			            index = (rm >> shift_imm) | masque;
+			        }
+			    }
+			    break;
+			}
+			case 3:
+			{
+			    if (shift_imm == 0){
+					uint8_t cpsr = arm_read_cpsr(p);
+					uint32_t c = get_bit(cpsr,29);
+					index = c | (rm << 1);
+			    } else {
+					index = (rm << shift_imm) | (rm >> (32-shift_imm));
+				}					
+			    break;
+	        }
+			default:
+			    break;
+			}
+
+		if(u){
+			return rn + index;
+		} else {
+			return rn - index;
+		}
+			
+	}
+	else if ((bits_2724 == 0x05) && (bits_21 == 1)){
+		// 4.Load and Store Word or Unsigned Byte - Immediate pre-indexed
 		uint32_t address;
-		if(get_bit(ins,23)){	
-			address =  arm_read_register(p,(uint8_t) get_bits(ins, 19, 16)) + (uint32_t) get_bits(ins, 11, 0);
+		if(u){
+			address = rn + offset_12;
     	}else {
-        	address = arm_read_register(p,(uint8_t) get_bits(ins, 19, 16)) - (uint32_t) get_bits(ins, 11, 0);
-    	}  
+        	address = rn - offset_12;
+    	}
+
 		if ConditionPassed(p,ins){
-			arm_write_register(p,(uint8_t) get_bits(ins, 19, 16),address);
+			arm_write_register(p, (uint8_t) get_bits(ins, 19, 16), address);
 		}
 		return address;
-	}else if ((get_bits(ins,27,24)==0x07)&&get_bit(ins,21)&&(get_bits(ins,11,4)==0x00)){
-		//Load and Store Word or Unsigned Byte - Register pre-indexed
+	}
+	else if ((bits_2724 == 0x07) && (bits_21 == 1) && (get_bits(ins,11,4) == 0)){
+		// 5.Load and Store Word or Unsigned Byte - Register pre-indexed
 		uint32_t address;
-		if(get_bit(ins,23)){	
-			address =  arm_read_register(p,(uint8_t) get_bits(ins,19,16)) + arm_read_register(p,(uint8_t) get_bits(ins,3,0));
+		if(u){
+			address = rn + rm;
     	}else {
-        	address = arm_read_register(p,(uint8_t) get_bits(ins,19,16)) - arm_read_register(p,(uint8_t) get_bits(ins,3,0));
-    	}  
+        	address = rn - rm;
+    	}
 		if ConditionPassed(p,ins){
-			arm_write_register(p,(uint8_t) get_bits(ins, 19, 16),address);
+			arm_write_register(p,(uint8_t) get_bits(ins, 19, 16), address);
 		}
 		return address;
-	}else if ((get_bits(ins,27,24)==0x04)&&!get_bit(ins,21)){
-		//Load and Store Word or Unsigned Byte - Immediate post-indexed
+	}
+	else if ((bits_2724 == 0x07) && (bits_21 == 1) && !get_bit(ins, 4)){
+		// 6.Load and Store Word or Unsigned Byte - Scaled register pre-indexed
+		uint8_t shift_imm = get_bits(ins, 11, 7);
+	    uint8_t shift_ind = get_bits(ins, 6, 5);
+	    uint32_t index = 0;
+		uint32_t address;
+	    switch (shift_ind)
+	        {
+			case 0:
+			    index = rm << shift_imm;
+			    break;
+			case 1:
+			    if (shift_imm == 0)
+			        index = 0;
+			    else
+			        index = rm >> shift_imm;
+				break;
+	        case 2:
+			{
+			    if (shift_imm == 0){
+			        if (get_bit(rm, 31) == 1){
+						index = 0xFFFFFFFF;
+					} else{
+						index = 0; 
+					}						
+			    }			
+			    else
+			    {
+			    	if (rm >= 0){
+						index = rm >> shift_imm;
+					} else {   
+						uint32_t masque = ((0xFFFFFFFF >> (32-shift_imm)) << (32-shift_imm));
+			            index = (rm >> shift_imm) | masque;
+			        }
+			    }
+			    break;
+			}
+			case 3:
+			{
+			    if (shift_imm == 0){
+					uint8_t cpsr = arm_read_cpsr(p);
+					uint32_t c = get_bit(cpsr,29);
+					index = c | (rm << 1);
+			    } else {
+					index = (rm << shift_imm) | (rm >> (32-shift_imm));
+				}					
+			    break;
+	        }
+			default:
+			    break;
+			}
+
+		if(u){
+			address = rn + index;
+		} else {
+			address = rn - index;
+		}
 		if ConditionPassed(p,ins){
-			if(get_bit(ins, 23) == 1){
-	        	return arm_read_register(p,(uint8_t) get_bits(ins, 19, 16)) + (uint32_t) get_bits(ins, 11, 0);
+			arm_write_register(p,(uint8_t) get_bits(ins, 19, 16), address);
+		}
+		return address;		
+	}
+	else if ((bits_2724 == 0x04) && (bits_21 == 0)){
+		// 7.Load and Store Word or Unsigned Byte - Immediate post-indexed
+		uint32_t address = rn;
+		if ConditionPassed(p, ins){
+			uint32_t rn_write;
+			if(u){
+	        	rn_write = rn + offset_12;
 	    	}else {
-	        	return arm_read_register(p,(uint8_t) get_bits(ins, 19, 16)) - (uint32_t) get_bits(ins, 11, 0);
-	    	} 
+	        	rn_write = rn - offset_12;
+	    	}
+			arm_write_register(p,(uint8_t) get_bits(ins, 19, 16), rn_write);	
 		}
-	} else if ((get_bits(ins,27,24)==0x06)&&!get_bit(ins,21)&&(get_bits(ins,11,4)==0x00)){
-		//Load and Store Word or Unsigned Byte - Register post-indexed
+		return address;
+	} 
+	else if ((bits_2724 == 0x06) && (bits_21 == 0) && (get_bits(ins,11,4) == 0)){
+		// 8.Load and Store Word or Unsigned Byte - Register post-indexed
+		uint32_t address = rn;
+		if ConditionPassed(p, ins){
+			uint32_t rn_write;
+			if(u){
+	        	rn_write = rn + rm;
+	    	}else {
+	        	rn_write = rn - rm;
+	    	}
+			arm_write_register(p,(uint8_t) get_bits(ins, 19, 16), rn_write);	
+		}
+		return address;
+		}
+	}
+	else if ((bits_2724 == 0x06) && (bits_21 == 0) && !get_bit(ins,4)){
+		// 9.Load and Store Word or Unsigned Byte - Scaled register post-indexed
+		uint32_t address = rn;
+		uint8_t shift_imm = get_bits(ins, 11, 7);
+	    uint8_t shift_ind = get_bits(ins, 6, 5);
+	    uint32_t index = 0;
+	    switch (shift_ind)
+	        {
+			case 0:
+			    index = rm << shift_imm;
+			    break;
+			case 1:
+			    if (shift_imm == 0)
+			        index = 0;
+			    else
+			        index = rm >> shift_imm;
+				break;
+	        case 2:
+			{
+			    if (shift_imm == 0){
+			        if (get_bit(rm, 31) == 1){
+						index = 0xFFFFFFFF;
+					} else{
+						index = 0; 
+					}						
+			    }			
+			    else
+			    {
+			    	if (rm >= 0){
+						index = rm >> shift_imm;
+					} else {   
+						uint32_t masque = (~((uint32_t)(0)) >> (32-shift_imm)) << (32-shift_imm);
+			            index = (rm >> shift_imm) | masque;
+			        }
+			    }
+			    break;
+			}
+			case 3:
+			{
+			    if (shift_imm == 0){
+					uint8_t cpsr = arm_read_cpsr(p);
+					uint32_t c = get_bit(cpsr,29);
+					index = c | (rm << 1);
+			    } else {
+					index = (rm << shift_imm) | (rm >> (32-shift_imm));
+				}					
+			    break;
+	        }
+			default:
+			    break;
+			}
+
 		if ConditionPassed(p,ins){
-			if(get_bit(ins,23)){	
-				return arm_read_register(p,(uint8_t) get_bits(ins,19,16)) + arm_read_register(p,(uint8_t) get_bits(ins,3,0));
-			}else{
-				return arm_read_register(p,(uint8_t) get_bits(ins,19,16)) - arm_read_register(p,(uint8_t) get_bits(ins,3,0));
-			}
+			uint32_t rn_write;
+			if(u){
+	        	rn_write = rn + index;
+	    	}else {
+	        	rn_write = rn - index;
+	    	}
+			arm_write_register(p,(uint8_t) get_bits(ins, 19, 16), rn_write);	
 		}
-	}else/*Addressing Mode 3 - Miscellaneous Loads and Stores*/ 
-		if((get_bits(ins,27,24)==0x01)&&(get_bits(ins,22,21)==0x02)&&get_bit(ins,7)&&get_bit(ins,4)){
-			// ??? Miscellaneous Loads and Stores - Immediate offset
-			uint32_t offset_8 = 0x00;
-			offset_8 = (uint32_t) ((get_bits(ins,11,8)<<4)|get_bits(ins,3,0));
-			if(get_bit(ins, 23) == 1){
-				return arm_read_register(p,(uint8_t) get_bits(ins, 19, 16)) +  offset_8
-			}else{
-				return arm_read_register(p,(uint8_t) get_bits(ins, 19, 16)) -  offset_8
-			}
-		}
+		return address;	
+	}
 }
+
+
+uint32_t get_adres_h(arm_core p,uint32_t ins){
+	int u = get_bit(ins, 23);
+	uint32_t rn = arm_read_register(p, (u_int8_t) get_bits(ins, 19, 16));
+	uint8_t bits_2724 = get_bits(ins, 27, 24);
+	uint8_t bits_2221 = get_bits(ins, 22, 21);
+	if (bits_2724 == 1) && (bits_2221 == 2) ){
+		// 1.Miscellaneous Loads and Stores - Immediate offset
+		uint32_t immedH = get_bits(ins, 11, 8);
+		uint32_t immedL = get_bits(ins, 3, 0);
+		uint32_t offset_8 = (immedH << 4) | immedL;
+		if(u){
+			return rn + offset_8;
+		} else {
+			return rn - offset_8;
+		}		
+	}
+	else if (bits_2724 == 1) && (bits_2221 == 0))
+	{  // 2.Miscellaneous Loads and Stores - Register offset
+		uint32_t rm = arm_read_register(p, (u_int8_t) get_bits(ins, 3, 0));
+		if(u){
+			return rn + rm;
+		} else {
+			return rn - rm;
+		}
+	}
+	else if (bits_2724 == 1) && (bits_2221 == 3))
+	{  // 3.Miscellaneous Loads and Stores - Immediate pre-indexed
+		uint32_t immedH = get_bits(ins, 11, 8);
+		uint32_t immedL = get_bits(ins, 3, 0);
+		uint32_t offset_8 = (immedH << 4) | immedL;
+		uint32_t address;
+		if(u){
+			address = rn + offset_8;
+		} else {
+			address = rn - offset_8;
+		}
+		if ConditionPassed(p,ins){
+			arm_write_register(p,(uint8_t) get_bits(ins, 19, 16), address);
+		}
+		return address;				
+	}
+	else if (bits_2724 == 1) && (bits_2221 == 1))
+	{  // 4.Miscellaneous Loads and Stores - Immediate pre-indexed
+		uint32_t address;
+		uint32_t rm = arm_read_register(p, (u_int8_t) get_bits(ins, 3, 0));
+		if(u){
+			address = rn + rm;
+		} else {
+			address = rn - rm;
+		}
+		if ConditionPassed(p,ins){
+			arm_write_register(p, (uint8_t) get_bits(ins,19,16), address);
+		}
+		return address;				
+	}
+	else if (bits_2724 == 0) && (bits_2221 == 2))
+	{  // 5.Miscellaneous Loads and Stores - Immediate post-indexed
+		uint32_t immedH = get_bits(ins, 11, 8);
+		uint32_t immedL = get_bits(ins, 3, 0);
+		uint32_t offset_8 = (immedH << 4) | immedL;
+		uint32_t address = rn;
+		if ConditionPassed(p,ins){
+			uint32_t rn_write;
+			if(u){
+	        	rn_write = rn + offset_8;
+	    	}else {
+	        	rn_write = rn - offset_8;
+	    	}
+			arm_write_register(p,(uint8_t) get_bits(ins, 19, 16), rn_write);	
+		}
+		return address;				
+	}
+	else if (bits_2724 == 0) && (bits_2221 == 0))
+	{  // 6.Miscellaneous Loads and Stores - Register post-indexed
+		uint32_t address = rn;
+		if ConditionPassed(p,ins){
+			uint32_t rn_write;
+			uint32_t rm = arm_read_register(p, (u_int8_t) get_bits(ins, 3, 0));
+			if(u){
+	        	rn_write = rn + rm;
+	    	}else {
+	        	rn_write = rn - rm;
+	    	}
+			arm_write_register(p,(uint8_t) get_bits(ins, 19, 16), rn_write);	
+		}
+		return address;				
+	}
+}
+
 
 NomsDeFunc get_func(uint32_t ins){
 	if(!get_bit(ins,27)&&get_bit(ins,26)){
@@ -108,14 +393,14 @@ NomsDeFunc get_func(uint32_t ins){
 		}else { //donc get_bit(ins,22)
 			if(get_bit(ins,20)){
 				return LDRB;
-			}else { // donc !get_bit(ins,20) 
+			}else { // donc !get_bit(ins,20)
 				return STRB;
 			}
 		}
 	}else if(!get_bit(ins,27)&&!get_bit(ins,26)&&!get_bit(ins,25)&&(get_bits(ins,7,4)==0x0B)){
 		if(get_bit(ins,20)){
 				return LDRH;
-			}else { // donc !get_bit(ins,20) 
+			}else { // donc !get_bit(ins,20)
 				return STRH;
 			}
 	}
@@ -162,13 +447,13 @@ int arm_load_store(arm_core p, uint32_t ins) {
     return UNDEFINED_INSTRUCTION;
 }
 int arm_load_store_multiple(arm_core p, uint32_t ins){
-	
-	return UNDEFINED_INSTRUCTION;	
+
+	return UNDEFINED_INSTRUCTION;
 }
 int arm_coprocessor_load_store(arm_core p, uint32_t ins) {
     if(get_bit(ins,27))
     	return arm_load_store_multiple(p,ins);
     else
 		return arm_load_store(p,ins);
- 
+
 }
