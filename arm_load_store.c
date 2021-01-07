@@ -29,8 +29,8 @@ typedef enum NomsDeFunc { LDR, LDRB, LDRH, STR, STRB, STRH, LDM, STM}
 
 uint32_t get_adres(arm_core p,uint32_t ins){
 	int u = get_bit(ins, 23);
-	uint32_t rm = arm_read_register(p, (u_int8_t) get_bits(ins, 3, 0));
-	uint32_t rn = arm_read_register(p, (u_int8_t) get_bits(ins, 19, 16));
+	uint32_t rm = arm_read_register(p, (uint8_t) get_bits(ins, 3, 0));
+	uint32_t rn = arm_read_register(p, (uint8_t) get_bits(ins, 19, 16));
 	uint32_t offset_12 = get_bits(ins, 11, 0);
 	uint8_t bits_2724 = get_bits(ins,27, 24);
 	uint8_t bits_21 = get_bit(ins, 21);
@@ -224,7 +224,6 @@ uint32_t get_adres(arm_core p,uint32_t ins){
 			arm_write_register(p,(uint8_t) get_bits(ins, 19, 16), rn_write);	
 		}
 		return address;
-		}
 	}
 	else if ((bits_2724 == 0x06) && (bits_21 == 0) && !get_bit(ins,4)){
 		// 9.Load and Store Word or Unsigned Byte - Scaled register post-indexed
@@ -297,7 +296,7 @@ uint32_t get_adres_h(arm_core p,uint32_t ins){
 	uint32_t rn = arm_read_register(p, (u_int8_t) get_bits(ins, 19, 16));
 	uint8_t bits_2724 = get_bits(ins, 27, 24);
 	uint8_t bits_2221 = get_bits(ins, 22, 21);
-	if (bits_2724 == 1) && (bits_2221 == 2) ){
+	if ((bits_2724 == 1) && (bits_2221 == 2)){
 		// 1.Miscellaneous Loads and Stores - Immediate offset
 		uint32_t immedH = get_bits(ins, 11, 8);
 		uint32_t immedL = get_bits(ins, 3, 0);
@@ -308,7 +307,7 @@ uint32_t get_adres_h(arm_core p,uint32_t ins){
 			return rn - offset_8;
 		}		
 	}
-	else if (bits_2724 == 1) && (bits_2221 == 0))
+	else if ((bits_2724 == 1) && (bits_2221 == 0))
 	{  // 2.Miscellaneous Loads and Stores - Register offset
 		uint32_t rm = arm_read_register(p, (u_int8_t) get_bits(ins, 3, 0));
 		if(u){
@@ -317,7 +316,7 @@ uint32_t get_adres_h(arm_core p,uint32_t ins){
 			return rn - rm;
 		}
 	}
-	else if (bits_2724 == 1) && (bits_2221 == 3))
+	else if ((bits_2724 == 1) && (bits_2221 == 3))
 	{  // 3.Miscellaneous Loads and Stores - Immediate pre-indexed
 		uint32_t immedH = get_bits(ins, 11, 8);
 		uint32_t immedL = get_bits(ins, 3, 0);
@@ -333,7 +332,7 @@ uint32_t get_adres_h(arm_core p,uint32_t ins){
 		}
 		return address;				
 	}
-	else if (bits_2724 == 1) && (bits_2221 == 1))
+	else if ((bits_2724 == 1) && (bits_2221 == 1))
 	{  // 4.Miscellaneous Loads and Stores - Immediate pre-indexed
 		uint32_t address;
 		uint32_t rm = arm_read_register(p, (u_int8_t) get_bits(ins, 3, 0));
@@ -347,7 +346,7 @@ uint32_t get_adres_h(arm_core p,uint32_t ins){
 		}
 		return address;				
 	}
-	else if (bits_2724 == 0) && (bits_2221 == 2))
+	else if ((bits_2724 == 0) && (bits_2221 == 2))
 	{  // 5.Miscellaneous Loads and Stores - Immediate post-indexed
 		uint32_t immedH = get_bits(ins, 11, 8);
 		uint32_t immedL = get_bits(ins, 3, 0);
@@ -364,7 +363,7 @@ uint32_t get_adres_h(arm_core p,uint32_t ins){
 		}
 		return address;				
 	}
-	else if (bits_2724 == 0) && (bits_2221 == 0))
+	else if ((bits_2724 == 0) && (bits_2221 == 0))
 	{  // 6.Miscellaneous Loads and Stores - Register post-indexed
 		uint32_t address = rn;
 		if ConditionPassed(p,ins){
