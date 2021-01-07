@@ -29,6 +29,44 @@ int arm_load_store(arm_core p, uint32_t ins);
 int arm_load_store_multiple(arm_core p, uint32_t ins);
 int arm_coprocessor_load_store(arm_core p, uint32_t ins);
 
+/*
+   get_index
+   description : obtenir le résultat de command shfit
+   parametres : instruction ins.
+   valeur de retour : index.
+   effets de bord : 
+*/
+uint32_t get_index(uint32_t ins);
+
+
+/*
+   operation_1
+   description : modifier l'adresse selon le U
+   parametres : U, poiteur de adresse, deux valeur qu'on doit faire l'opération.
+   valeur de retour : rien
+   effets de bord : adresse a été modifié
+*/
+void operation_1(int u, uint32_t *adr, uint32_t op_gauche, uint32_t op_droit);
+
+
+
+/*
+   condtionPassFonc
+   description : modifier le contenue de registre Rn = adresse
+   parametres : arm core p, instruction ins, poiteur de adresse.
+   valeur de retour : rien
+   effets de bord : Rn a été modifié
+*/
+void condtionPassFonc(arm_core p, uint32_t ins, uint32_t ins *adr);
+
+/*
+   condtionPassFonc_modifieRn
+   description : modifier le contenue de registre Rn = Rn +/- op_droit
+   parametres : arm core p, instruction ins, op_droit.
+   valeur de retour : rien
+   effets de bord : Rn a été modifié
+*/
+void condtionPassFonc_modifieRn(arm_core p, uint32_t ins, uint32_t op_droit)
 
 /*
    get_adres
@@ -38,6 +76,15 @@ int arm_coprocessor_load_store(arm_core p, uint32_t ins);
    effets de bord : si la condition satisfait, on écrit valeur dans le registre Rn.
 */
 uint32_t get_adres(arm_core p,uint32_t ins);
+
+/*
+   get_offset
+   description : otenir l'offet 
+   parametres : instruction ins.
+   valeur de retour : offset.
+   effets de bord : 
+*/
+uint32_t get_offset(uint32_t ins)
 
 /*
    get_adres_h
