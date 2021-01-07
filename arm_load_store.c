@@ -232,8 +232,8 @@ uint32_t get_adres_h(arm_core p,uint32_t ins){
 
 
 NomsDeFunc get_func(uint32_t ins){
-	if(!get_bit(ins,27)&&get_bit(ins,26)){
-		if (!get_bit(ins,22)){
+	if(get_bits(ins, 27, 26) == 0x1){
+		if (!get_bit(ins, 22)){
 			if(get_bit(ins,20)){
 				return LDR;
 			}else{ // donc !get_bit(ins,20)
@@ -246,12 +246,19 @@ NomsDeFunc get_func(uint32_t ins){
 				return STRB;
 			}
 		}
-	}else if(!get_bit(ins,27)&&!get_bit(ins,26)&&!get_bit(ins,25)&&(get_bits(ins,7,4)==0x0B)){
+	}else if((get_bits(ins, 27, 25) == 0x0) && (get_bits(ins, 7, 4) == 0xB)){
 		if(get_bit(ins,20)){
 				return LDRH;
 			}else { // donc !get_bit(ins,20)
 				return STRH;
 			}
+	}
+	else if((get_bits(ins, 27, 25) == 0x4) && (!get_bit(ins, 22))){
+		if(get_bit(ins,20)){
+				return LDM;
+		} else { // donc !get_bit(ins,20)
+				return STM;
+		}		
 	}
 }
 
