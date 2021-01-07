@@ -24,6 +24,7 @@ Contact: Guillaume.Huard@imag.fr
 #define __ARM_LOAD_STORE_H__
 #include <stdint.h>
 #include "arm_core.h"
+#define CP15_reg1_Ubit 1
 
 int arm_load_store(arm_core p, uint32_t ins);
 int arm_load_store_multiple(arm_core p, uint32_t ins);
