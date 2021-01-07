@@ -29,11 +29,6 @@ Contact: Guillaume.Huard@imag.fr
 
 #define NB_MODES 32
 
-#define PC   15
-#define LR   14
-#define CPSR 16
-#define SPSR 17
-
 //Un registre (r0,r1,r2,r3,r4,r5,r6,r7,r8,r8_fiq,r9,r9_fiq,r10,r10_fiq...) --> instancié 37 fois
 struct reg {
 	uint32_t reg_value;

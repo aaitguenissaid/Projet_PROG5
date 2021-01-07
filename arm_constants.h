@@ -24,6 +24,12 @@ Contact: Guillaume.Huard@imag.fr
 #define __ARM_CONSTANTS_H__
 #include <stdint.h>
 
+/* ARM Specific registers */
+#define PC   15
+#define LR   14
+#define CPSR 16
+#define SPSR 17
+
 /* ARM Modes */
 #define USR 0x10
 #define FIQ 0x11
