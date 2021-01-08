@@ -151,6 +151,7 @@ uint32_t get_address(arm_core p, uint32_t ins)
 	uint8_t bits_2724 = get_bits(ins, 27, 24);
 	uint8_t bits_21 = get_bit(ins, 21);
 	uint32_t address = 0;
+	uint32_t index = get_index(p, ins);
 	if ((bits_2724 == 0x5) && (bits_21 == 0))
 	{
 		// 1.Load and Store Word or Unsigned Byte - Immediate offset
@@ -166,7 +167,6 @@ uint32_t get_address(arm_core p, uint32_t ins)
 	else if ((bits_2724 == 0x7) && (bits_21 == 0) && (get_bit(ins, 4) == 0))
 	{
 		// 3.Load and Store Word or Unsigned Byte - Scaled register offset
-		uint32_t index = get_index(p, ins);
 		add_substract(u, &address, rn, index);
 		return address;
 	}
@@ -187,8 +187,6 @@ uint32_t get_address(arm_core p, uint32_t ins)
 	else if ((bits_2724 == 0x07) && (bits_21 == 1) && !get_bit(ins, 4))
 	{
 		// 6.Load and Store Word or Unsigned Byte - Scaled register pre-indexed
-
-		uint32_t index = get_index(p, ins);
 		add_substract(u, &address, rn, index);
 		condition_pass_function(p, ins, &address);
 		return address;
@@ -211,7 +209,6 @@ uint32_t get_address(arm_core p, uint32_t ins)
 	{
 		// 9.Load and Store Word or Unsigned Byte - Scaled register post-indexed
 		address = rn;
-		uint32_t index = get_index(p, ins);
 		condtion_pass_modify(p, ins, index);
 		return address;
 	}
@@ -229,32 +226,30 @@ uint32_t get_address_h(arm_core p, uint32_t ins)
 {
 	int u = get_bit(ins, 23);
 	uint32_t rn = arm_read_register(p, (uint8_t)get_bits(ins, 19, 16));
+	uint32_t rm = arm_read_register(p, (uint8_t)get_bits(ins, 3, 0));
 	uint8_t bits_2724 = get_bits(ins, 27, 24);
 	uint8_t bits_2221 = get_bits(ins, 22, 21);
 	uint32_t address = 0;
+	uint32_t offset_8 = get_offset(ins);
 	if ((bits_2724 == 1) && (bits_2221 == 2))
 	{
 		// 1.Miscellaneous Loads and Stores - Immediate offset
-		uint32_t offset_8 = get_offset(ins);
 		add_substract(u, &address, rn, offset_8);
 		return address;
 	}
 	else if ((bits_2724 == 1) && (bits_2221 == 0))
 	{ // 2.Miscellaneous Loads and Stores - Register offset
-		uint32_t rm = arm_read_register(p, (uint8_t)get_bits(ins, 3, 0));
 		add_substract(u, &address, rn, rm);
 		return address;
 	}
 	else if ((bits_2724 == 1) && (bits_2221 == 3))
 	{ // 3.Miscellaneous Loads and Stores - Immediate pre-indexed
-		uint32_t offset_8 = get_offset(ins);
 		add_substract(u, &address, rn, offset_8);
 		condition_pass_function(p, ins, &address);
 		return address;
 	}
 	else if ((bits_2724 == 1) && (bits_2221 == 1))
 	{ // 4.Miscellaneous Loads and Stores - Immediate pre-indexed
-		uint32_t rm = arm_read_register(p, (uint8_t)get_bits(ins, 3, 0));
 		add_substract(u, &address, rn, rm);
 		condition_pass_function(p, ins, &address);
 		return address;
@@ -262,14 +257,12 @@ uint32_t get_address_h(arm_core p, uint32_t ins)
 	else if ((bits_2724 == 0) && (bits_2221 == 2))
 	{ // 5.Miscellaneous Loads and Stores - Immediate post-indexed
 		address = rn;
-		uint32_t offset_8 = get_offset(ins);
 		condtion_pass_modify(p, ins, offset_8);
 		return address;
 	}
 	else if ((bits_2724 == 0) && (bits_2221 == 0))
 	{ // 6.Miscellaneous Loads and Stores - Register post-indexed
 		address = rn;
-		uint32_t rm = arm_read_register(p, (uint8_t)get_bits(ins, 3, 0));
 		condtion_pass_modify(p, ins, rm);
 		return address;
 	}
@@ -448,114 +441,86 @@ void get_start_end_address(arm_core p, uint32_t ins, uint32_t *start_address, ui
 	}	
 }
 
+void set_t_bit(arm_core p,uint8_t x){
+	uint32_t cprs = arm_read_cpsr(p);
+	if (x==0x01)
+		cprs = set_bit(cprs, 5);
+	else
+		cprs = clr_bit(cprs, 5);
+	arm_write_cpsr(p, cprs);
+}
 
+uint32_t get_address_from_name(arm_core p,uint32_t ins,name_of_function name){
+	if(name==LDRH||name==STRH)
+			return get_address_h(p, ins);
+		else
+			return get_address(p, ins);
+}
+
+uint32_t rotate_right(uint32_t data, x){
+	data = (data >> x) | (data << (32 - x));
+}
 
 int arm_load_store(arm_core p, uint32_t ins)
 {
 	name_of_function name = get_func(ins);
 	uint8_t Rd = (uint8_t)get_bits(ins, 15, 12);
-	uint32_t cprs = arm_read_cpsr(p);
 	uint32_t data = 0;
 	uint8_t byte = 0;
 	uint16_t half = 0;
 	uint32_t address;
-	uint32_t RdVal;
-
-	switch (name)
-	{
-	case LDR:
-	{
-		if (condition_passed(p, ins))
+	uint32_t RdVal= arm_read_register(p, Rd);
+	if (condition_passed(p, ins)){
+		address=get_address_from_name(p,ins,name);
+		switch (name)
 		{
-			address = get_address(p, ins);
+		case LDR:
+		{
 			if (CP15_reg1_Ubit == 0)
 			{
 				if (arm_read_word(p, address, &data) != 0)
-				{
 					printf("ERROR");
-				}
-				int bits_10 = get_bits(address, 1, 0);
-				data = (data >> (8 * bits_10)) | (data << (32 - 8 * bits_10));
+				data=rotate_right(data,8 * (int)get_bits(address, 1, 0))
 			}
 			else
 			{
 				if (arm_read_word(p, address, &data) != 0)
-				{
 					printf("ERROR");
-				}
 			}
 			if (Rd == 0x0F)
 			{
 				arm_write_register(p, (uint8_t)PC, (data & 0xFFFFFFFE)); 
-				if (get_bit(data, 0))
-				{
-					cprs = set_bit(cprs, 5);
-				}
-				else
-				{
-					cprs = clr_bit(cprs, 5);
-				}
-				arm_write_cpsr(p, cprs);
+				set_t_bit(p,(uint8_t)get_bit(data, 0))	
 			}
 			else
 			{
 				arm_write_register(p, Rd, data);
 			}
 		}
-		return 0;
-	}
-	case STR:
-	{
-		if (condition_passed(p, ins))
+		case STR:
 		{
-			address = get_address(p, ins);
-			RdVal = arm_read_register(p, Rd);
 			if (arm_write_word(p, address, RdVal) != 0)
-			{
 				printf("ERROR");
-			}
 		}
-		return 0;
-	}
-	case LDRB:
-	{
-		if (condition_passed(p, ins))
+		case LDRB:
 		{
-			address = get_address(p, ins);
 			if (arm_read_byte(p, address, &byte) != 0)
-			{
 				printf("ERROR");
-			}
 			arm_write_register(p, Rd, (uint32_t)byte);
 		}
-		return 0;
-	}
-	case STRB:
-	{
-		if (condition_passed(p, ins))
+		case STRB:
 		{
-			address = get_address(p, ins);
-			RdVal = arm_read_register(p, Rd);
 			if (arm_write_byte(p, address, (uint8_t)get_bits(RdVal, 7, 0)) != 0)
-			{
 				printf("ERROR");
-			}
-			return 0;
 		}
-	}
-	case LDRH:
-	{
-		if (condition_passed(p, ins))
+		case LDRH:
 		{
-			address = get_address_h(p, ins);
 			if (CP15_reg1_Ubit == 0)
 			{
 				if (get_bit(address, 0) == 0x00)
 				{
 					if (arm_read_half(p, address, &half) != 0)
-					{
 						printf("ERROR");
-					}
 				}
 				else
 				{
@@ -565,53 +530,38 @@ int arm_load_store(arm_core p, uint32_t ins)
 			else
 			{
 				if (arm_read_half(p, address, &half) != 0)
-				{
 					printf("ERROR");
-				}
 			}
-			arm_write_register(p, Rd, (uint32_t)half);
+			arm_write_register(p, Rd, (uint32_t)half);		
 		}
-		return 0;
-	}
-	case STRH:
-	{
-		if (condition_passed(p, ins))
+		case STRH:
 		{
-			address = get_address_h(p, ins);
-			RdVal = arm_read_register(p, Rd);
 			if (CP15_reg1_Ubit == 0)
 			{
 				if (get_bit(address, 0) == 0)
 				{
 					if (arm_write_half(p, address, (uint16_t)get_bits(RdVal, 15, 0)) != 0)
-					{
 						printf("ERROR");
-					}
 				}
 				else
 				{
 					if (arm_write_half(p, address, (uint16_t)0x00) != 0)
-					{
 						printf("ERROR");
-					}
 				}
 			}
 			else
 			{
 				if (arm_write_half(p, address, (uint16_t)get_bits(RdVal, 15, 0)) != 0)
-				{
 					printf("ERROR");
-				}
 			}
+		}
+		default:
+			return UNDEFINED_INSTRUCTION;
 		}
 		return 0;
 	}
-
-	default:
-		return UNDEFINED_INSTRUCTION;
-	}
 }
-	int arm_load_store_multiple(arm_core p, uint32_t ins)
+int arm_load_store_multiple(arm_core p, uint32_t ins)
 	{
 		uint32_t end_address = 0;
 		uint32_t start_address = 0;
@@ -619,13 +569,12 @@ int arm_load_store(arm_core p, uint32_t ins)
 		uint32_t address;
 		uint32_t data = 0;
 		name_of_function name = get_func(ins);
-		switch (name)
-		{
-			case LDM:
+		if (condition_passed(p, ins)){
+			address = start_address;
+			switch (name)
 			{
-				if (condition_passed(p, ins)){
-					address = start_address;
-					
+				case LDM:
+				{
 					for (uint8_t i = 0; i < 15; i++)
 					{
 						if (get_bit(ins, i) == 1)
@@ -636,31 +585,17 @@ int arm_load_store(arm_core p, uint32_t ins)
 							address = address + 4; 
 						}					
 					}
-
 					if (get_bit(ins, 15) == 1){
 						uint32_t value = 0;
-						uint32_t cprs = arm_read_cpsr(p);
 						if (arm_read_word(p, address, &value) != 0)
 							printf("ERROR");
 						arm_write_register(p, (uint8_t)PC, (value & 0xFFFFFFFE)); 
-						if (get_bit(data, 0)){
-							cprs = set_bit(cprs, 5);	
-						}else{
-							cprs = clr_bit(cprs, 5);
-						}
-						arm_write_cpsr(p, cprs);
+						set_t_bit(p,get_bit(data, 0));
 						address = address + 4; 
-					}	
-					assert (end_address = address - 4);
-					return 0;
+					}			
 				}
-				return -1;
-			}
-
-			case STM:
-			{
-				if (condition_passed(p, ins)){
-					address = start_address;
+				case STM:
+				{
 					for (uint8_t i = 0; i < 15; i++)
 					{
 						if (get_bit(ins, i) == 1)
@@ -671,16 +606,16 @@ int arm_load_store(arm_core p, uint32_t ins)
 							address = address + 4; 							
 						}					
 					}					
-					assert (end_address = address - 4);
-					return 0;
 				}
-				return -1;
+				default:
+					return UNDEFINED_INSTRUCTION;
 			}
-
-			default:
-				return UNDEFINED_INSTRUCTION;
+			assert (end_address = address - 4);
+			return 0;
 		}
-	}
+		return -1;
+	}	
+
 	int arm_coprocessor_load_store(arm_core p, uint32_t ins)
 	{
 		if (get_bit(ins, 27))
