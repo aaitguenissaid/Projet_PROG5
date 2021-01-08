@@ -42,37 +42,37 @@ Il y a 11 addressings modes:
 */
 
 /*
-   opcode
-   description : pour obtenir la valeur de opcode dans une instruction.
+   get_opcode
+   description : Obtenir la valeur de opcode dans une instruction.
    parametres : uint32_t ins
    valeur de retour : la valeur de opcode
    effets de bord : 
 */
-uint8_t opcode(uint32_t ins);
+uint8_t get_opcode(uint32_t ins);
 
 /*
-   I_bit
-   description : pour obtenir le I bit dans une instruction.
+   bit_I
+   description : Obtenir le I bit dans une instruction.
    parametres : uint32_t ins
    valeur de retour : le bit ins[25]
    effets de bord : 
 */
-uint8_t I_bit(uint32_t ins);
+uint8_t bit_I(uint32_t ins);
 
 uint8_t bit_4(uint32_t ins);
 
 uint8_t bit_7(uint32_t ins);
 
-uint8_t S_bit(uint32_t ins);
+uint8_t bit_S(uint32_t ins);
 
 /*
-   C_Flag
+   get_C_flag
    description : Obtenir la valeur du C_Flag dans le registre CPSR.
    parametres : arm_core p
    valeur de retour : la valeur du C_Flag
    effets de bord : 
 */
-uint8_t C_Flag(arm_core p);
+uint8_t get_C_flag(arm_core p);
 
 /*
    shift_imm
@@ -99,7 +99,7 @@ uint8_t shift(uint32_t ins);
    valeur de retour : ins[3:0]
    effets de bord : 
 */
-uint8_t Rm(uint32_t ins);
+uint8_t get_rm(uint32_t ins);
 
 /*
    Rm_31
@@ -108,7 +108,7 @@ uint8_t Rm(uint32_t ins);
    valeur de retour : Rm[31]
    effets de bord : 
 */
-uint8_t Rm_31(arm_core p, uint32_t ins);
+uint8_t get_rm_31(arm_core p, uint32_t ins);
 
 /*
    Rs
@@ -117,7 +117,8 @@ uint8_t Rm_31(arm_core p, uint32_t ins);
    valeur de retour : ins[11:8]
    effets de bord : 
 */
-uint8_t Rs(uint32_t ins);
+uint8_t get_rs(uint32_t ins);
+
 
 /*
    Rs_7_0
@@ -126,7 +127,60 @@ uint8_t Rs(uint32_t ins);
    valeur de retour : Rs[7:0]
    effets de bord : 
 */
-uint8_t Rs_7_0(arm_core p, uint32_t ins);
+uint8_t get_rs_7_0(arm_core p, uint32_t ins);
+
+/*
+   two_complement
+   description : Faire le complement à 2 pour un entier.
+   parametres : uint32_t operand
+   valeur de retour : un entier non-signé à 32 bits
+   effets de bord : 
+*/
+uint32_t two_complement(uint32_t operand);
+
+/*
+   operation
+   description : Faire une opération pour deux entiers à 64 bits.
+   parametres : uint64_t operand1, uint64_t operand2, int op
+                op = 1, l'addition
+                op = 2, la soustraction
+   valeur de retour : un entier non-signé à 64 bits
+   effets de bord : 
+*/
+uint64_t operation(uint64_t operand1, uint64_t operand2, int op);
+
+/*
+   carry_from
+   description : vérifier si'il y a Carry pour une opération.
+   parametres : uint32_t operand1, uint32_t operand2, int op
+                op = 1, l'addition
+                op = 2, la soustraction
+   valeur de retour : 1 si'il y a Carry, 0 sinon
+   effets de bord : 
+*/
+int carry_from(uint32_t operand1, uint32_t operand2, int op);
+
+/*
+   overflow_from
+   description : vérifier si'il y a Overflow pour une opération.
+   parametres : uint32_t operand1, uint32_t operand2, int op
+                op = 1, l'addition
+                op = 2, la soustraction
+   valeur de retour : 1 si'il y a Overflow, 0 sinon
+   effets de bord : 
+*/
+int overflow_from(uint32_t operand1, uint32_t operand2, int op);
+
+/*
+   borrow_from
+   description : vérifier si'il y a Borrow pour une soustraction.
+                 pour (operand1 - operand2), si operand1 < operand2, il y a Borrow.
+                 si operand1 > operand2, il y en n'a pas.
+   parametres : uint32_t operand1, uint32_t operand2
+   valeur de retour : 1 si'il y a Borrow, 0 sinon
+   effets de bord : 
+*/
+int borrow_from(uint32_t operand1, uint32_t operand2);
 
 /*
    imm_32_bit
@@ -135,6 +189,7 @@ uint8_t Rs_7_0(arm_core p, uint32_t ins);
    valeur de retour : 
    effets de bord : modifier les valeurs shifter_operand et shifter_carry_out
 */
+
 void imm_32_bit(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
 
 /*
@@ -144,7 +199,6 @@ void imm_32_bit(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *sh
    valeur de retour : 
    effets de bord : modifier les valeurs shifter_operand et shifter_carry_out
 */
-void LSL_imm(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
 
 /*
    LSR_imm
@@ -153,7 +207,17 @@ void LSL_imm(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shift
    valeur de retour : 
    effets de bord : modifier les valeurs shifter_operand et shifter_carry_out
 */
-void LSR_imm(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
+
+void lsl_imm(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
+
+/*
+   LSR_imm
+   description : Data-processing operands - Immediate. (page A5-6)
+   parametres : arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out
+   valeur de retour : 
+   effets de bord : modifier les valeurs shifter_operand et shifter_carry_out
+*/
+void lsr_imm(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
 
 /*
    ASR_imm
@@ -162,7 +226,7 @@ void LSR_imm(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shift
    valeur de retour : 
    effets de bord : modifier les valeurs shifter_operand et shifter_carry_out
 */
-void ASR_imm(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
+void asr_imm(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
 
 /*
    ROR_imm
@@ -171,7 +235,7 @@ void ASR_imm(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shift
    valeur de retour : 
    effets de bord : modifier les valeurs shifter_operand et shifter_carry_out
 */
-void ROR_imm(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
+void ror_imm(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
 
 /*
    reg_shift
@@ -189,7 +253,7 @@ void reg_shift(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shi
    valeur de retour : 
    effets de bord : modifier les valeurs shifter_operand et shifter_carry_out
 */
-void LSL_reg(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
+void lsl_reg(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
 
 /*
    LSR_reg
@@ -198,7 +262,7 @@ void LSL_reg(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shift
    valeur de retour : 
    effets de bord : modifier les valeurs shifter_operand et shifter_carry_out
 */
-void LSR_reg(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
+void lsr_reg(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
 
 /*
    ASR_reg
@@ -207,7 +271,7 @@ void LSR_reg(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shift
    valeur de retour : 
    effets de bord : modifier les valeurs shifter_operand et shifter_carry_out
 */
-void ASR_reg(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
+void asr_reg(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
 
 /*
    ROR_reg
@@ -216,7 +280,7 @@ void ASR_reg(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shift
    valeur de retour : 
    effets de bord : modifier les valeurs shifter_operand et shifter_carry_out
 */
-void ROR_reg(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
+void ror_reg(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
 
 /*
    ROR_extend
@@ -225,7 +289,7 @@ void ROR_reg(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shift
    valeur de retour : 
    effets de bord : modifier les valeurs shifter_operand et shifter_carry_out
 */
-void ROR_extend(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
+void ror_extend(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
 
 /*
    arm_data_processing_shift
