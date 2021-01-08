@@ -25,8 +25,8 @@ Contact: Guillaume.Huard@imag.fr
 #include <stdint.h>
 
 /* ARM Specific registers */
-#define PC   15
 #define LR   14
+#define PC   15
 #define CPSR 16
 #define SPSR 17
 
