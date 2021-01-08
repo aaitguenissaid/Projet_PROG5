@@ -370,6 +370,84 @@ int condition_passed(arm_core p, uint32_t ins)
 		return 0;
 	}
 }
+
+uint32_t number_of_set_bits(uint32_t ins){
+	uint32_t number = 0;
+	for (int i = 0; i < 16; i++)
+	{
+		if(((ins >> i) & 1 ) == 1)
+			number++;
+	}
+	return number;	
+}
+
+void condtion_pass_modify_add(arm_core p, uint32_t ins, uint32_t op_droit)
+{
+	if (condition_passed(p, ins) && get_bit(ins, 21))
+	{
+		uint32_t Rn_write;
+		int u = get_bit(ins, 23);
+		uint32_t rn = arm_read_register(p, (uint8_t)get_bits(ins, 19, 16));
+		Rn_write = rn + op_droit * 4;
+		arm_write_register(p, (uint8_t)get_bits(ins, 19, 16), Rn_write);
+	}
+}
+
+void condtion_pass_modify_subtract(arm_core p, uint32_t ins, uint32_t op_droit)
+{
+	if (condition_passed(p, ins) && get_bit(ins, 21))
+	{
+		uint32_t Rn_write;
+		int u = get_bit(ins, 23);
+		uint32_t rn = arm_read_register(p, (uint8_t)get_bits(ins, 19, 16));
+		Rn_write = rn - op_droit * 4;
+		arm_write_register(p, (uint8_t)get_bits(ins, 19, 16), Rn_write);
+	}
+}
+
+
+void get_start_end_address(arm_core p, uint32_t ins, uint32_t *start_address, uint32_t *end_address){
+	if (get_bits(ins, 27, 25) == 0x4)
+	{
+		int bits_24_23 = get_bits(ins, 24, 23);
+		uint32_t rn = arm_read_register(p, (uint8_t)get_bits(ins, 19, 16));
+		switch (bits_24_23)
+		{
+		case 0:
+			/* Load and Store Multiple - Decrement after */
+			*start_address = rn - (number_of_set_bits(ins) * 4) + 4;
+			*end_address = rn;
+			condtion_pass_modify_subtract(p, ins, number_of_set_bits(ins));
+			break;
+		
+		case 1:
+			/* Load and Store Multiple - Increment after */
+			*start_address = rn;
+			*end_address = rn + (number_of_set_bits(ins) * 4) - 4;
+			condtion_pass_modify_add(p, ins, number_of_set_bits(ins));
+			break;
+
+		case 2:
+			/* Load and Store Multiple - Decrement before */
+			*start_address = rn - (number_of_set_bits(ins) * 4);
+			*end_address = rn - 4;
+			condtion_pass_modify_subtract(p, ins, number_of_set_bits(ins));
+			break;
+
+		case 3:
+			/* Load and Store Multiple - Increment before */
+			*start_address = rn + 4;
+			*end_address = rn + (number_of_set_bits(ins) * 4);
+			condtion_pass_modify_add(p, ins, number_of_set_bits(ins));
+			break;
+		default:
+			break;
+		}
+	}	
+}
+
+
+
 int arm_load_store(arm_core p, uint32_t ins)
 {
 	name_of_function name = get_func(ins);
