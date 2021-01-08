@@ -51,7 +51,7 @@ void add_substract(int u, uint32_t *adr, uint32_t op_gauche, uint32_t op_droit);
    valeur de retour : rien
    effets de bord : Rn a été modifié
 */
-void condtion_pass_function(arm_core p, uint32_t ins, uint32_t *adr);
+void condtion_pass_function(arm_core p, uint32_t ins, uint32_t address);
 
 /*
    condtion_pass_modify
@@ -117,22 +117,13 @@ int condition_passed(arm_core p, uint32_t ins);
 uint32_t number_of_set_bits(uint32_t ins);
 
 /*
-   condtion_pass_modify_add
-   description : fontion en utilisant addition pour modifier le contenu de registre Rn
+   condtion_pass_modify_w
+   description : fontion en utilisant addition ou sustraction pour modifier le contenu de registre Rn
    parametres : arm p et instruction ins.
    valeur de retour : 
    effets de bord : Rn a été modifié
 */
-void condtion_pass_modify_add(arm_core p, uint32_t ins, uint32_t op_droit);
-
-/*
-   condtion_pass_modify_subtract
-   description : fontion en utilisant sustraction pour modifier le contenu de registre Rn
-   parametres : arm p et instruction ins.
-   valeur de retour : 
-   effets de bord : Rn a été modifié
-*/
-void condtion_pass_modify_subtract(arm_core p, uint32_t ins, uint32_t op_droit);
+void condtion_pass_modify_w(arm_core p, uint32_t ins, uint32_t op_droit, int op);
 
 /*
    get_start_end_address
@@ -160,16 +151,6 @@ void set_t_bit(arm_core p,uint8_t x);
    effets de bord : 
 */
 uint32_t get_address_from_name(arm_core p, uint32_t ins, name_of_function name);
-
-/*
-   rotate_right
-   description : rotation de valeur à droit 
-   parametres : arm p et valeur x
-   valeur de retour : une valeur a été déplacée
-   effets de bord : 
-*/
-uint32_t rotate_right(uint32_t data, int x);
-
 
 /*
    arm_load_store
