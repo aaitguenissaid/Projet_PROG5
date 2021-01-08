@@ -25,6 +25,8 @@ Contact: Guillaume.Huard@imag.fr
 #include "arm_constants.h"
 #include "util.h"
 #include "debug.h"
+#include <assert.h>
+
 typedef enum 
 {
 	LDR,
@@ -611,8 +613,73 @@ int arm_load_store(arm_core p, uint32_t ins)
 }
 	int arm_load_store_multiple(arm_core p, uint32_t ins)
 	{
+		uint32_t end_address = 0;
+		uint32_t start_address = 0;
+		get_start_end_address(p, ins, &start_address, &end_address);
+		uint32_t address;
+		uint32_t data = 0;
+		name_of_function name = get_func(ins);
+		switch (name)
+		{
+			case LDM:
+			{
+				if (condition_passed(p, ins)){
+					address = start_address;
+					
+					for (uint8_t i = 0; i < 15; i++)
+					{
+						if (get_bit(ins, i) == 1)
+						{
+							if (arm_read_word(p, address, &data) != 0)
+								printf("ERROR");
+							arm_write_register(p, i, data);
+							address = address + 4; 
+						}					
+					}
 
-		return UNDEFINED_INSTRUCTION;
+					if (get_bit(ins, 15) == 1){
+						uint32_t value = 0;
+						uint32_t cprs = arm_read_cpsr(p);
+						if (arm_read_word(p, address, &value) != 0)
+							printf("ERROR");
+						arm_write_register(p, (uint8_t)PC, (value & 0xFFFFFFFE)); 
+						if (get_bit(data, 0)){
+							cprs = set_bit(cprs, 5);	
+						}else{
+							cprs = clr_bit(cprs, 5);
+						}
+						arm_write_cpsr(p, cprs);
+						address = address + 4; 
+					}	
+					assert (end_address = address - 4);
+					return 0;
+				}
+				return -1;
+			}
+
+			case STM:
+			{
+				if (condition_passed(p, ins)){
+					address = start_address;
+					for (uint8_t i = 0; i < 15; i++)
+					{
+						if (get_bit(ins, i) == 1)
+						{
+							uint32_t Ri_val = arm_read_register(p, i);
+							if (arm_write_word(p, address, Ri_val) != 0)
+								printf("ERROR");
+							address = address + 4; 							
+						}					
+					}					
+					assert (end_address = address - 4);
+					return 0;
+				}
+				return -1;
+			}
+
+			default:
+				return UNDEFINED_INSTRUCTION;
+		}
 	}
 	int arm_coprocessor_load_store(arm_core p, uint32_t ins)
 	{
