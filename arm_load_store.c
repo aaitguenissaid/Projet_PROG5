@@ -401,7 +401,8 @@ void condtion_pass_modify_subtract(arm_core p, uint32_t ins, uint32_t op_droit)
 }
 
 
-void get_start_end_address(arm_core p, uint32_t ins, uint32_t *start_address, uint32_t *end_address){
+void get_start_end_address(arm_core p, uint32_t ins, uint32_t *start_address, uint32_t *end_address)
+{
 	if (get_bits(ins, 27, 25) == 0x4)
 	{
 		int bits_24_23 = get_bits(ins, 24, 23);
@@ -450,15 +451,16 @@ void set_t_bit(arm_core p,uint8_t x){
 	arm_write_cpsr(p, cprs);
 }
 
-uint32_t get_address_from_name(arm_core p,uint32_t ins,name_of_function name){
-	if(name==LDRH||name==STRH)
-			return get_address_h(p, ins);
-		else
-			return get_address(p, ins);
+uint32_t get_address_from_name(arm_core p, uint32_t ins, name_of_function name){
+	if((name == LDRH) || (name == STRH))
+		return get_address_h(p, ins);
+	else
+		return get_address(p, ins);
 }
 
-uint32_t rotate_right(uint32_t data,int  x){
-	data = (data >> x) | (data << (32 - x));
+uint32_t rotate_right(uint32_t data, int  x){
+	data = ((data >> x) | (data << (32 - x)));
+	return data;
 }
 
 int arm_load_store(arm_core p, uint32_t ins)
@@ -469,9 +471,9 @@ int arm_load_store(arm_core p, uint32_t ins)
 	uint8_t byte = 0;
 	uint16_t half = 0;
 	uint32_t address;
-	uint32_t RdVal= arm_read_register(p, Rd);
+	uint32_t RdVal = arm_read_register(p, Rd);
 	if (condition_passed(p, ins)){
-		address=get_address_from_name(p,ins,name);
+		address = get_address_from_name(p,ins,name);
 		switch (name)
 		{
 		case LDR:
@@ -480,7 +482,7 @@ int arm_load_store(arm_core p, uint32_t ins)
 			{
 				if (arm_read_word(p, address, &data) != 0)
 					printf("ERROR");
-				data=rotate_right(data,8 * (int)get_bits(address, 1, 0))
+				data = rotate_right(data, 8 * (int)get_bits(address, 1, 0));
 			}
 			else
 			{
@@ -490,7 +492,7 @@ int arm_load_store(arm_core p, uint32_t ins)
 			if (Rd == 0x0F)
 			{
 				arm_write_register(p, (uint8_t)PC, (data & 0xFFFFFFFE)); 
-				set_t_bit(p,(uint8_t)get_bit(data, 0))	
+				set_t_bit(p,(uint8_t)get_bit(data, 0));	
 			}
 			else
 			{
@@ -590,7 +592,7 @@ int arm_load_store_multiple(arm_core p, uint32_t ins)
 						if (arm_read_word(p, address, &value) != 0)
 							printf("ERROR");
 						arm_write_register(p, (uint8_t)PC, (value & 0xFFFFFFFE)); 
-						set_t_bit(p,get_bit(data, 0));
+						set_t_bit(p, get_bit(data, 0));
 						address = address + 4; 
 					}			
 				}
