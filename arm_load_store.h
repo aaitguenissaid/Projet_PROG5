@@ -156,7 +156,7 @@ uint32_t get_address_from_name(arm_core p, uint32_t ins, name_of_function name);
    arm_load_store
    description : traite les instructions LDR, STR , LDRB ,STRB ,LDRH ,STRH
    parametres : arm core p, instruction ins.
-   valeur de retour : ???
+   valeur de retour : une address
    effets de bord : applique les instructions de changement appropriées en mémoire et / ou change les registres
 */
 int arm_load_store(arm_core p, uint32_t ins);
@@ -164,7 +164,7 @@ int arm_load_store(arm_core p, uint32_t ins);
    arm_load_store_multiple
    description : traite les instructions LDM , STM
    parametres : arm core p, instruction ins.
-   valeur de retour : ???
+   valeur de retour : 0 succes ou -1 failure.
    effets de bord : applique les instructions de changement appropriées en mémoire et / ou change les registres
 */
 
@@ -173,26 +173,10 @@ int arm_load_store_multiple(arm_core p, uint32_t ins);
    arm_coprocessor_load_store
    description : recupere une instruction et envoie l'instruction pour traitement 
    parametres : arm core p, instruction ins.
-   valeur de retour : ???
+   valeur de retour : 0 succes ou -1 failure.
    effets de bord : 
 */
 int arm_coprocessor_load_store(arm_core p, uint32_t ins);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*
    set_t_bit
@@ -202,14 +186,7 @@ int arm_coprocessor_load_store(arm_core p, uint32_t ins);
    effets de bord : Registr CPRS modifier.
 */
 void set_t_bit(arm_core p,uint8_t x);
-/*
-   rotate_right   ???
-   description :  tourner valeur a distance x
-   parametres : valeur data et x distance à tourner.
-   valeur de retour : valer tourner .
-   effets de bord : 
-*/
-uint32_t rotate_right(uint32_t data, int x);
+
 /*
    get_address_from_name
    description : décoder l'instruction pour LDR|STR{<cond>}H|SH|SB|D et LDR|STR{<cond>}{B}{T}

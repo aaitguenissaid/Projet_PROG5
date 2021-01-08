@@ -47,53 +47,36 @@ uint32_t get_index(arm_core p, uint32_t ins)
 	uint32_t index;
 	switch (shift_ind)
 	{
-	case 0:
+	case 0: /* LSL */
 		index = rm << shift_imm;
 		break;
-	case 1:
+	case 1: /* LSR */
 		if (shift_imm == 0)
 			index = 0;
 		else
 			index = rm >> shift_imm;
 		break;
-	case 2:
+	case 2: /* ASR */
 	{
-		if (shift_imm == 0)
-		{
+		if (shift_imm == 0){
 			if (get_bit(rm, 31) == 1)
-			{
 				index = 0xFFFFFFFF;
-			}
 			else
-			{
-				index = 0;
-			}
-		}
-		else
-		{
-			if (rm >= 0)
-			{
-				index = rm >> shift_imm;
-			}
-			else
-			{
-				uint32_t masque = ((0xFFFFFFFF >> (32 - shift_imm)) << (32 - shift_imm));
-				index = (rm >> shift_imm) | masque;
-			}
-		}
+				index = 0;			
+		}else{
+			index = asr(rm, shift_imm);
+		}			
 		break;
 	}
-	case 3:
+	case 3: /* ROR or RRX */
 	{
 		if (shift_imm == 0)
 		{
 			uint8_t cpsr = arm_read_cpsr(p);
 			uint32_t c = get_bit(cpsr, 29);
-			index = c | (rm << 1);
-		}
-		else
-		{
-			index = (rm << shift_imm) | (rm >> (32 - shift_imm));
+			index = (c << 31) | (rm >> 1);
+		}else{
+			index = ror(rm, shift_imm);
 		}
 		break;
 	}
@@ -105,22 +88,18 @@ uint32_t get_index(arm_core p, uint32_t ins)
 
 void add_substract(int u, uint32_t *adr, uint32_t op_gauche, uint32_t op_droit)
 {
-	if (u)
-	{
+	if(u) {
 		*adr = op_gauche + op_droit;
-	}
-	else
-	{
+	}else{
 		*adr = op_gauche - op_droit;
 	}
 }
 
-void condition_pass_function(arm_core p, uint32_t ins, uint32_t *adr)
+void condition_pass_function(arm_core p, uint32_t ins, uint32_t address)
 {
 	if (condition_passed(p, ins))
-	{
-		arm_write_register(p, (uint8_t)get_bits(ins, 19, 16), *adr);
-	}
+		arm_write_register(p, (uint8_t)get_bits(ins, 19, 16), address);
+
 }
 
 void condtion_pass_modify(arm_core p, uint32_t ins, uint32_t op_droit)
@@ -130,12 +109,9 @@ void condtion_pass_modify(arm_core p, uint32_t ins, uint32_t op_droit)
 		uint32_t Rn_write;
 		int u = get_bit(ins, 23);
 		uint32_t rn = arm_read_register(p, (uint8_t)get_bits(ins, 19, 16));
-		if (u)
-		{
+		if (u) {
 			Rn_write = rn + op_droit;
-		}
-		else
-		{
+		}else{
 			Rn_write = rn - op_droit;
 		}
 		arm_write_register(p, (uint8_t)get_bits(ins, 19, 16), Rn_write);
@@ -174,21 +150,21 @@ uint32_t get_address(arm_core p, uint32_t ins)
 	{
 		// 4.Load and Store Word or Unsigned Byte - Immediate pre-indexed
 		add_substract(u, &address, rn, offset_12);
-		condition_pass_function(p, ins, &address);
+		condition_pass_function(p, ins, address);
 		return address;
 	}
 	else if ((bits_2724 == 0x07) && (bits_21 == 1) && (get_bits(ins, 11, 4) == 0))
 	{
 		// 5.Load and Store Word or Unsigned Byte - Register pre-indexed
 		add_substract(u, &address, rn, rm);
-		condition_pass_function(p, ins, &address);
+		condition_pass_function(p, ins, address);
 		return address;
 	}
 	else if ((bits_2724 == 0x07) && (bits_21 == 1) && !get_bit(ins, 4))
 	{
 		// 6.Load and Store Word or Unsigned Byte - Scaled register pre-indexed
 		add_substract(u, &address, rn, index);
-		condition_pass_function(p, ins, &address);
+		condition_pass_function(p, ins, address);
 		return address;
 	}
 	else if ((bits_2724 == 0x04) && (bits_21 == 0))
@@ -230,10 +206,10 @@ uint32_t get_address_h(arm_core p, uint32_t ins)
 	uint8_t bits_2724 = get_bits(ins, 27, 24);
 	uint8_t bits_2221 = get_bits(ins, 22, 21);
 	uint32_t address = 0;
-	uint32_t offset_8 = get_offset(ins);
 	if ((bits_2724 == 1) && (bits_2221 == 2))
 	{
 		// 1.Miscellaneous Loads and Stores - Immediate offset
+		uint32_t offset_8 = get_offset(ins);
 		add_substract(u, &address, rn, offset_8);
 		return address;
 	}
@@ -244,19 +220,21 @@ uint32_t get_address_h(arm_core p, uint32_t ins)
 	}
 	else if ((bits_2724 == 1) && (bits_2221 == 3))
 	{ // 3.Miscellaneous Loads and Stores - Immediate pre-indexed
+		uint32_t offset_8 = get_offset(ins);
 		add_substract(u, &address, rn, offset_8);
-		condition_pass_function(p, ins, &address);
+		condition_pass_function(p, ins, address);
 		return address;
 	}
 	else if ((bits_2724 == 1) && (bits_2221 == 1))
 	{ // 4.Miscellaneous Loads and Stores - Immediate pre-indexed
 		add_substract(u, &address, rn, rm);
-		condition_pass_function(p, ins, &address);
+		condition_pass_function(p, ins, address);
 		return address;
 	}
 	else if ((bits_2724 == 0) && (bits_2221 == 2))
 	{ // 5.Miscellaneous Loads and Stores - Immediate post-indexed
 		address = rn;
+		uint32_t offset_8 = get_offset(ins);
 		condtion_pass_modify(p, ins, offset_8);
 		return address;
 	}
@@ -266,6 +244,22 @@ uint32_t get_address_h(arm_core p, uint32_t ins)
 		condtion_pass_modify(p, ins, rm);
 		return address;
 	}
+}
+
+void set_t_bit(arm_core p,uint8_t x){
+	uint32_t cprs = arm_read_cpsr(p);
+	if (x==0x01)
+		cprs = set_bit(cprs, 5);
+	else
+		cprs = clr_bit(cprs, 5);
+	arm_write_cpsr(p, cprs);
+}
+
+uint32_t get_address_from_name(arm_core p,uint32_t ins,name_of_function name){
+	if(name == LDRH || name == STRH)
+		return get_address_h(p, ins);
+	else
+		return get_address(p, ins);
 }
 
 name_of_function get_func(uint32_t ins)
@@ -329,40 +323,40 @@ int condition_passed(arm_core p, uint32_t ins)
 	uint8_t v = get_bit(cpsr, 28);
 	switch (cond)
 	{
-	case 0x00:
-		return z == 0x01; //0000  EQ       Equal                               Z set
-	case 0x01:
-		return z == 0x00; //0001  NE       Not equal                           Z clear
-	case 0x02:
-		return c == 0x01; //0010  CS/HS    Carry set/unsigned higher or same   C set
-	case 0x03:
-		return c == 0x00; //0011  CC/LO    Carry clear/unsigned lower          C clear
-	case 0x04:
-		return n == 0x01; //0100  MI       Minus/negative                      N set
-	case 0x05:
-		return n == 0x00; //0101  PL       Plus/positive or zero               N clear
-	case 0x06:
-		return v == 0x01; //0110  VS       Overflow                            V set
-	case 0x07:
-		return v == 0x00; //0111  VC       No overflow                         V clear
-	case 0x08:
-		return z == 0x00 && c == 0x01; //1000  HI       Unsigned higher                     C set and Z clear
-	case 0x09:
-		return z == 0x01 || c == 0x00; //1001  LS       Unsigned lower or same              C clear or Z set
-	case 0x0A:
-		return n == v; //1010  GE       Signed greater than or equal        N set and V set, orN clear and V clear (N == V)
-	case 0x0B:
-		return n != v; //1011  LT       Signed less than                    N set and V clear, or N clear and V set (N != V)
-	case 0x0C:
-		return z == 0x00 && n == v; //1100  GT       Signed greater than                 Z clear, and either N set and V set, or N clear and V clear (Z == 0,N == V)
-	case 0x0D:
-		return z == 0x01 || n != v; //1101  LE       Signed less than or Equal 			 Z set, or N set and V clear, or N clear and V set (Z == 1 or N != V)
-	case 0x0E:
-		return 1; //1110  AL       Always (unconditional)
-	case 0x0F:
-		return 0; //1111  -        See Condition code 0b1111
-	default:
-		return 0;
+		case 0x00:
+			return z == 0x01; //0000  EQ       Equal                               Z set
+		case 0x01:
+			return z == 0x00; //0001  NE       Not equal                           Z clear
+		case 0x02:
+			return c == 0x01; //0010  CS/HS    Carry set/unsigned higher or same   C set
+		case 0x03:
+			return c == 0x00; //0011  CC/LO    Carry clear/unsigned lower          C clear
+		case 0x04:
+			return n == 0x01; //0100  MI       Minus/negative                      N set
+		case 0x05:
+			return n == 0x00; //0101  PL       Plus/positive or zero               N clear
+		case 0x06:
+			return v == 0x01; //0110  VS       Overflow                            V set
+		case 0x07:
+			return v == 0x00; //0111  VC       No overflow                         V clear
+		case 0x08:
+			return z == 0x00 && c == 0x01; //1000  HI       Unsigned higher                     C set and Z clear
+		case 0x09:
+			return z == 0x01 || c == 0x00; //1001  LS       Unsigned lower or same              C clear or Z set
+		case 0x0A:
+			return n == v; //1010  GE       Signed greater than or equal        N set and V set, orN clear and V clear (N == V)
+		case 0x0B:
+			return n != v; //1011  LT       Signed less than                    N set and V clear, or N clear and V set (N != V)
+		case 0x0C:
+			return z == 0x00 && n == v; //1100  GT       Signed greater than                 Z clear, and either N set and V set, or N clear and V clear (Z == 0,N == V)
+		case 0x0D:
+			return z == 0x01 || n != v; //1101  LE       Signed less than or Equal 			 Z set, or N set and V clear, or N clear and V set (Z == 1 or N != V)
+		case 0x0E:
+			return 1; //1110  AL       Always (unconditional)
+		case 0x0F:
+			return 0; //1111  -        See Condition code 0b1111
+		default:
+			return 0;
 	}
 }
 
@@ -376,91 +370,59 @@ uint32_t number_of_set_bits(uint32_t ins){
 	return number;	
 }
 
-void condtion_pass_modify_add(arm_core p, uint32_t ins, uint32_t op_droit)
+void condtion_pass_modify_w(arm_core p, uint32_t ins, uint32_t op_droit, int op)
 {
 	if (condition_passed(p, ins) && get_bit(ins, 21))
 	{
 		uint32_t Rn_write;
-		int u = get_bit(ins, 23);
 		uint32_t rn = arm_read_register(p, (uint8_t)get_bits(ins, 19, 16));
-		Rn_write = rn + op_droit * 4;
+		if(op)
+			Rn_write = rn + op_droit;
+		else
+			Rn_write = rn - op_droit;
 		arm_write_register(p, (uint8_t)get_bits(ins, 19, 16), Rn_write);
 	}
 }
 
-void condtion_pass_modify_subtract(arm_core p, uint32_t ins, uint32_t op_droit)
-{
-	if (condition_passed(p, ins) && get_bit(ins, 21))
-	{
-		uint32_t Rn_write;
-		int u = get_bit(ins, 23);
-		uint32_t rn = arm_read_register(p, (uint8_t)get_bits(ins, 19, 16));
-		Rn_write = rn - op_droit * 4;
-		arm_write_register(p, (uint8_t)get_bits(ins, 19, 16), Rn_write);
-	}
-}
-
-
-void get_start_end_address(arm_core p, uint32_t ins, uint32_t *start_address, uint32_t *end_address)
-{
+void get_start_end_address(arm_core p, uint32_t ins, uint32_t *start_address, uint32_t *end_address){
 	if (get_bits(ins, 27, 25) == 0x4)
 	{
 		int bits_24_23 = get_bits(ins, 24, 23);
 		uint32_t rn = arm_read_register(p, (uint8_t)get_bits(ins, 19, 16));
+		uint32_t register_list = number_of_set_bits(ins) * 4;
 		switch (bits_24_23)
 		{
-		case 0:
-			/* Load and Store Multiple - Decrement after */
-			*start_address = rn - (number_of_set_bits(ins) * 4) + 4;
-			*end_address = rn;
-			condtion_pass_modify_subtract(p, ins, number_of_set_bits(ins));
-			break;
-		
-		case 1:
-			/* Load and Store Multiple - Increment after */
-			*start_address = rn;
-			*end_address = rn + (number_of_set_bits(ins) * 4) - 4;
-			condtion_pass_modify_add(p, ins, number_of_set_bits(ins));
-			break;
+			case 0:
+				/* Load and Store Multiple - Decrement after */
+				*start_address = rn - register_list + 4;
+				*end_address = rn;
+				condtion_pass_modify_w(p, ins, register_list, 0);
+				break;
+			
+			case 1:
+				/* Load and Store Multiple - Increment after */
+				*start_address = rn;
+				*end_address = rn + register_list - 4;
+				condtion_pass_modify_w(p, ins, register_list, 1);
+				break;
 
-		case 2:
-			/* Load and Store Multiple - Decrement before */
-			*start_address = rn - (number_of_set_bits(ins) * 4);
-			*end_address = rn - 4;
-			condtion_pass_modify_subtract(p, ins, number_of_set_bits(ins));
-			break;
+			case 2:
+				/* Load and Store Multiple - Decrement before */
+				*start_address = rn - register_list;
+				*end_address = rn - 4;
+				condtion_pass_modify_w(p, ins, register_list, 0);
+				break;
 
-		case 3:
-			/* Load and Store Multiple - Increment before */
-			*start_address = rn + 4;
-			*end_address = rn + (number_of_set_bits(ins) * 4);
-			condtion_pass_modify_add(p, ins, number_of_set_bits(ins));
-			break;
-		default:
-			break;
+			case 3:
+				/* Load and Store Multiple - Increment before */
+				*start_address = rn + 4;
+				*end_address = rn + register_list;
+				condtion_pass_modify_w(p, ins, register_list, 1);
+				break;
+			default:
+				break;
 		}
 	}	
-}
-
-void set_t_bit(arm_core p,uint8_t x){
-	uint32_t cprs = arm_read_cpsr(p);
-	if (x==0x01)
-		cprs = set_bit(cprs, 5);
-	else
-		cprs = clr_bit(cprs, 5);
-	arm_write_cpsr(p, cprs);
-}
-
-uint32_t get_address_from_name(arm_core p, uint32_t ins, name_of_function name){
-	if((name == LDRH) || (name == STRH))
-		return get_address_h(p, ins);
-	else
-		return get_address(p, ins);
-}
-
-uint32_t rotate_right(uint32_t data, int  x){
-	data = ((data >> x) | (data << (32 - x)));
-	return data;
 }
 
 int arm_load_store(arm_core p, uint32_t ins)
@@ -470,158 +432,153 @@ int arm_load_store(arm_core p, uint32_t ins)
 	uint32_t data = 0;
 	uint8_t byte = 0;
 	uint16_t half = 0;
-	uint32_t address;
 	uint32_t RdVal = arm_read_register(p, Rd);
-	if (condition_passed(p, ins)){
-		address = get_address_from_name(p,ins,name);
+	if (condition_passed(p, ins)) {
+		uint32_t address = get_address_from_name(p, ins, name);
 		switch (name)
 		{
-		case LDR:
-		{
-			if (CP15_reg1_Ubit == 0)
+			case LDR:
 			{
-				if (arm_read_word(p, address, &data) != 0)
+				if (CP15_reg1_Ubit == 0) {
+					if (arm_read_word(p, address, &data) != 0)
+						printf("ERROR");
+					uint8_t bits_1_0 = get_bits(address, 1, 0);
+					data = ror(data, 8 * bits_1_0);
+				}else{
+					if (arm_read_word(p, address, &data) != 0)
+						printf("ERROR");
+				}
+				if (Rd == 0x0F){
+					arm_write_register(p, (uint8_t)PC, (data & 0xFFFFFFFE)); 
+					set_t_bit(p,(uint8_t)get_bit(data, 0));	
+				}else{
+					arm_write_register(p, Rd, data);
+				}
+				return 0;
+			}
+			case STR:
+			{
+				if (arm_write_word(p, address, RdVal) != 0)
 					printf("ERROR");
-				data = rotate_right(data, 8 * (int)get_bits(address, 1, 0));
+				return 0;
 			}
-			else
+			case LDRB:
 			{
-				if (arm_read_word(p, address, &data) != 0)
+				if (arm_read_byte(p, address, &byte) != 0)
 					printf("ERROR");
+				arm_write_register(p, Rd, (uint32_t)byte);
+				return 0;
 			}
-			if (Rd == 0x0F)
+			case STRB:
 			{
-				arm_write_register(p, (uint8_t)PC, (data & 0xFFFFFFFE)); 
-				set_t_bit(p,(uint8_t)get_bit(data, 0));	
+				if (arm_write_byte(p, address, (uint8_t)get_bits(RdVal, 7, 0)) != 0)
+					printf("ERROR");
+				return 0;
+				
 			}
-			else
+			case LDRH:
 			{
-				arm_write_register(p, Rd, data);
-			}
-		}
-		case STR:
-		{
-			if (arm_write_word(p, address, RdVal) != 0)
-				printf("ERROR");
-		}
-		case LDRB:
-		{
-			if (arm_read_byte(p, address, &byte) != 0)
-				printf("ERROR");
-			arm_write_register(p, Rd, (uint32_t)byte);
-		}
-		case STRB:
-		{
-			if (arm_write_byte(p, address, (uint8_t)get_bits(RdVal, 7, 0)) != 0)
-				printf("ERROR");
-		}
-		case LDRH:
-		{
-			if (CP15_reg1_Ubit == 0)
-			{
-				if (get_bit(address, 0) == 0x00)
-				{
+				if (CP15_reg1_Ubit == 0){
+					if (get_bit(address, 0) == 0x00){
+						if (arm_read_half(p, address, &half) != 0)
+							printf("ERROR");
+					}else{
+						half = 0x00; //UNPREDICTABLE
+					}
+				}else{
 					if (arm_read_half(p, address, &half) != 0)
 						printf("ERROR");
 				}
-				else
-				{
-					half = 0x00; //UNPREDICTABLE
-				}
+				arm_write_register(p, Rd, (uint32_t)half);
+				return 0;
 			}
-			else
+			case STRH:
 			{
-				if (arm_read_half(p, address, &half) != 0)
-					printf("ERROR");
-			}
-			arm_write_register(p, Rd, (uint32_t)half);		
-		}
-		case STRH:
-		{
-			if (CP15_reg1_Ubit == 0)
-			{
-				if (get_bit(address, 0) == 0)
-				{
+				if (CP15_reg1_Ubit == 0){
+					if (get_bit(address, 0) == 0){
+						if (arm_write_half(p, address, (uint16_t)get_bits(RdVal, 15, 0)) != 0)
+							printf("ERROR");
+					}else{
+						if (arm_write_half(p, address, (uint16_t)0x00) != 0)
+							printf("ERROR");
+					}
+				}else{
 					if (arm_write_half(p, address, (uint16_t)get_bits(RdVal, 15, 0)) != 0)
 						printf("ERROR");
 				}
-				else
-				{
-					if (arm_write_half(p, address, (uint16_t)0x00) != 0)
-						printf("ERROR");
-				}
+			return 0;
 			}
-			else
-			{
-				if (arm_write_half(p, address, (uint16_t)get_bits(RdVal, 15, 0)) != 0)
-					printf("ERROR");
-			}
+
+			default:
+				return UNDEFINED_INSTRUCTION;
 		}
-		default:
-			return UNDEFINED_INSTRUCTION;
-		}
-		return 0;
 	}
+	return -1;
 }
+
 int arm_load_store_multiple(arm_core p, uint32_t ins)
-	{
-		uint32_t end_address = 0;
-		uint32_t start_address = 0;
-		get_start_end_address(p, ins, &start_address, &end_address);
-		uint32_t address;
-		uint32_t data = 0;
-		name_of_function name = get_func(ins);
-		if (condition_passed(p, ins)){
-			address = start_address;
-			switch (name)
-			{
-				case LDM:
+{
+	uint32_t end_address = 0;
+	uint32_t start_address = 0;
+	get_start_end_address(p, ins, &start_address, &end_address);
+	uint32_t address;
+	uint32_t data = 0;
+	name_of_function name = get_func(ins);
+	if (condition_passed(p, ins)){
+		address = start_address;
+		switch (name)
+		{
+			case LDM:
+			{					
+				for (uint8_t i = 0; i < 15; i++)
 				{
-					for (uint8_t i = 0; i < 15; i++)
+					if (get_bit(ins, i) == 1)
 					{
-						if (get_bit(ins, i) == 1)
-						{
-							if (arm_read_word(p, address, &data) != 0)
-								printf("ERROR");
-							arm_write_register(p, i, data);
-							address = address + 4; 
-						}					
-					}
-					if (get_bit(ins, 15) == 1){
-						uint32_t value = 0;
-						if (arm_read_word(p, address, &value) != 0)
+						if (arm_read_word(p, address, &data) != 0)
 							printf("ERROR");
-						arm_write_register(p, (uint8_t)PC, (value & 0xFFFFFFFE)); 
-						set_t_bit(p, get_bit(data, 0));
+						arm_write_register(p, i, data);
 						address = address + 4; 
-					}			
-				}
-				case STM:
-				{
-					for (uint8_t i = 0; i < 15; i++)
-					{
-						if (get_bit(ins, i) == 1)
-						{
-							uint32_t Ri_val = arm_read_register(p, i);
-							if (arm_write_word(p, address, Ri_val) != 0)
-								printf("ERROR");
-							address = address + 4; 							
-						}					
 					}					
 				}
-				default:
-					return UNDEFINED_INSTRUCTION;
+				if (get_bit(ins, 15) == 1){
+					uint32_t value = 0;
+					uint32_t cprs = arm_read_cpsr(p);
+					if (arm_read_word(p, address, &value) != 0)
+						printf("ERROR");
+					arm_write_register(p, (uint8_t)PC, (value & 0xFFFFFFFE)); 
+					set_t_bit(p,get_bit(data, 0));
+					address = address + 4; 
+				}	
+				assert (end_address = address - 4);
+				return 0;
 			}
-			assert (end_address = address - 4);
-			return 0;
-		}
-		return -1;
-	}	
+			case STM:
+			{
+				for (uint8_t i = 0; i < 15; i++)
+				{
+					if (get_bit(ins, i) == 1)
+					{
+						uint32_t Ri_val = arm_read_register(p, i);
+						if (arm_write_word(p, address, Ri_val) != 0)
+							printf("ERROR");
+						address = address + 4; 							
+					}					
+				}					
+				assert (end_address = address - 4);
+				return 0;
+			}
 
-	int arm_coprocessor_load_store(arm_core p, uint32_t ins)
-	{
-		if (get_bit(ins, 27))
-			return arm_load_store_multiple(p, ins);
-		else
-			return arm_load_store(p, ins);
+			default:
+				return UNDEFINED_INSTRUCTION;
+		}
 	}
+	return -1;
+}
+	
+int arm_coprocessor_load_store(arm_core p, uint32_t ins)
+{
+	if (get_bit(ins, 27))
+		return arm_load_store_multiple(p, ins);
+	else
+		return arm_load_store(p, ins);
+}
