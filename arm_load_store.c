@@ -457,7 +457,7 @@ uint32_t get_address_from_name(arm_core p,uint32_t ins,name_of_function name){
 			return get_address(p, ins);
 }
 
-uint32_t rotate_right(uint32_t data, x){
+uint32_t rotate_right(uint32_t data,int  x){
 	data = (data >> x) | (data << (32 - x));
 }
 
