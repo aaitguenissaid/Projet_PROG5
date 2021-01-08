@@ -25,15 +25,35 @@ Contact: Guillaume.Huard@imag.fr
 #include <stdint.h>
 #include "arm_core.h"
 #define CP15_reg1_Ubit 1
-
+/*
+   arm_load_store
+   description : traite les instructions LDR, STR , LDRB ,STRB ,LDRH ,STRH
+   parametres : arm core p, instruction ins.
+   valeur de retour : ???
+   effets de bord : applique les instructions de changement appropriées en mémoire et / ou change les registres
+*/
 int arm_load_store(arm_core p, uint32_t ins);
+/*
+   arm_load_store_multiple
+   description : traite les instructions LDM , STM
+   parametres : arm core p, instruction ins.
+   valeur de retour : ???
+   effets de bord : applique les instructions de changement appropriées en mémoire et / ou change les registres
+*/
 int arm_load_store_multiple(arm_core p, uint32_t ins);
+/*
+   arm_coprocessor_load_store
+   description : recupere une instruction et envoie l'instruction pour traitement 
+   parametres : arm core p, instruction ins.
+   valeur de retour : ???
+   effets de bord : 
+*/
 int arm_coprocessor_load_store(arm_core p, uint32_t ins);
 
 /*
-   get_index
+   get_index 
    description : obtenir le résultat de command shfit
-   parametres : instruction ins.
+   parametres : arm core p, instruction ins.
    valeur de retour : index.
    effets de bord : 
 */
@@ -82,7 +102,7 @@ uint32_t get_address(arm_core p,uint32_t ins);
    get_offset
    description : otenir l'offet 
    parametres : instruction ins.
-   valeur de retour : offset.
+   valeur de retour : adresse.
    effets de bord : 
 */
 uint32_t get_offset(uint32_t ins)
@@ -96,4 +116,28 @@ uint32_t get_offset(uint32_t ins)
 */
 uint32_t get_address_h(arm_core p,uint32_t ins);
 
+/*
+   set_t_bit
+   description :  mettre en place bit T
+   parametres : arm p et x bit a deposer.
+   valeur de retour : rien.
+   effets de bord : Registr CPRS modifier.
+*/
+void set_t_bit(arm_core p,uint8_t x);
+/*
+   rotate_right   ???
+   description :  tourner valeur a distance x
+   parametres : valeur data et x distance à tourner.
+   valeur de retour : valer tourner .
+   effets de bord : 
+*/
+uint32_t rotate_right(uint32_t data, int x);
+/*
+   get_address_from_name
+   description : décoder l'instruction pour LDR|STR{<cond>}H|SH|SB|D et LDR|STR{<cond>}{B}{T}
+   parametres : arm p  , instruction ins et nom de function .
+   valeur de retour : adresse.
+   effets de bord : si la condition satisfait, on écrit valeur dans le registre Rn.
+*/
+uint32_t get_address_from_name(arm_core p,uint32_t ins,name_of_function name);
 #endif
