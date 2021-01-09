@@ -190,6 +190,7 @@ void Sigdelset(sigset_t *set, int signum)
     return;
 }
 
+/*
 int Sigismember(const sigset_t *set, int signum)
 {
     int rc;
@@ -197,7 +198,7 @@ int Sigismember(const sigset_t *set, int signum)
 	unix_error("Sigismember error");
     return rc;
 }
-
+*/
 
 /********************************
  * Wrappers for Unix I/O routines
@@ -522,13 +523,13 @@ void Pthread_once(pthread_once_t *once_control, void (*init_function)()) {
 /*******************************
  * Wrappers for Posix semaphores
  *******************************/
-
+/*
 void Sem_init(sem_t *sem, int pshared, unsigned int value) 
 {
     if (sem_init(sem, pshared, value) < 0)
 	unix_error("Sem_init error");
 }
-
+*/
 void P(sem_t *sem) 
 {
     if (sem_wait(sem) < 0)
