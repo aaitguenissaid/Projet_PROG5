@@ -774,5 +774,50 @@ int arm_data_processing_shift(arm_core p, uint32_t ins) {
 }
 
 int arm_data_processing_immediate_msr(arm_core p, uint32_t ins) {
+	if((get_bits(ins, 27, 26) == 0) && (get_bits(ins, 24, 23) == 2) && (get_bits(ins, 21, 20) == 2)){
+		if (condition_passed(p, ins)){
+			uint32_t operand;
+			uint32_t mask;
+			uint32_t user_mask = 0xF8000000;
+			uint32_t priv_mask = 0x0000000F;
+			uint32_t state_mask = 0x00000020;
+			if(get_bit(ins, 25) == 1){
+				uint32_t huit_bit_immediate = get_bits(ins, 7, 0);
+				uint8_t rotate_imm = get_bits(ins, 11, 8);
+				operand = ror(huit_bit_immediate, rotate_imm*2);
+			}else{
+				uint8_t bit_3_0 = get_bits(ins, 3, 0);
+				operand = arm_read_register(p, bit_3_0);
+			}
+			if (((operand & 0x07FFFF00) != 0) | ((operand & 0x06FFFF00) != 0))   
+				return 0;              // UNPREDICTABLE
+			uint32_t byte_mask = (get_bit(ins, 16) ? 0x000000FF : 0x00000000) | \
+								 (get_bit(ins, 17) ? 0x0000FF00 : 0x00000000) | \
+								 (get_bit(ins, 18) ? 0x00FF0000 : 0x00000000) | \
+								 (get_bit(ins, 19) ? 0xFF000000 : 0x00000000);
+			if(get_bit(ins, 22) == 0){ // R == 0
+				if(arm_in_a_privileged_mode(p)){                  // InAPrivilegedMode()
+					if((operand & state_mask) != 0){
+						return 0;      // UNPREDICTABLE
+					}else{
+						mask = byte_mask & (user_mask | priv_mask);
+					}									
+ 				}else{
+					mask = byte_mask & user_mask;
+				}
+				uint32_t cpsr_value = (arm_read_cpsr(p) & ~mask) | (operand & mask);				
+				arm_write_cpsr(p, cpsr_value);
+
+			}else{ // R == 1
+				if(arm_current_mode_has_spsr(p)){
+					mask = byte_mask & (user_mask | priv_mask | state_mask);
+					uint32_t spsr_value = (arm_read_spsr(p) & ~mask) | (operand & mask);				
+					arm_write_spsr(p, spsr_value);
+				}else{
+					return 0;
+				}				
+			}			
+		}
+	}
     return UNDEFINED_INSTRUCTION;
 }
