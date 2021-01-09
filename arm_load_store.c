@@ -178,6 +178,8 @@ uint32_t get_address(arm_core p, uint32_t ins)
 		condtion_pass_modify(p, ins, index);
 		return address;
 	}
+	else
+		return -1;	
 }
 
 uint32_t get_offset(uint32_t ins)
@@ -234,6 +236,8 @@ uint32_t get_address_h(arm_core p, uint32_t ins)
 		condtion_pass_modify(p, ins, rm);
 		return address;
 	}
+	else 
+		return -1;
 }
 
 void set_t_bit(arm_core p,uint8_t x){
@@ -301,6 +305,8 @@ enum name_of_function get_func(uint32_t ins)
 			return STM;
 		}
 	}
+	else
+		return UNDEFINED_INSTRUCTION;
 }
 
 int condition_passed(arm_core p, uint32_t ins)
@@ -532,14 +538,13 @@ int arm_load_store_multiple(arm_core p, uint32_t ins)
 				}
 				if (get_bit(ins, 15) == 1){
 					uint32_t value = 0;
-					uint32_t cprs = arm_read_cpsr(p);
 					if (arm_read_word(p, address, &value) != 0)
 						printf("ERROR");
 					arm_write_register(p, (uint8_t)PC, (value & 0xFFFFFFFE)); 
 					set_t_bit(p,get_bit(data, 0));
 					address = address + 4; 
 				}	
-				assert (end_address = address - 4);
+				assert (end_address == (address - 4));
 				return 0;
 			}
 			case STM:
@@ -554,7 +559,7 @@ int arm_load_store_multiple(arm_core p, uint32_t ins)
 						address = address + 4; 							
 					}					
 				}					
-				assert (end_address = address - 4);
+				assert (end_address == (address - 4));
 				return 0;
 			}
 
