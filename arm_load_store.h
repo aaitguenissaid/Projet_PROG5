@@ -25,17 +25,6 @@ Contact: Guillaume.Huard@imag.fr
 #include <stdint.h>
 #include "arm_core.h"
 #define CP15_reg1_Ubit 1
-enum name_of_function
-{
-	LDR,
-	LDRB,
-	LDRH,
-	STR,
-	STRB,
-	STRH,
-	LDM,
-	STM
-} ; 
 
 /*
    get_index 

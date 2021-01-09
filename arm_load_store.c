@@ -27,7 +27,17 @@ Contact: Guillaume.Huard@imag.fr
 #include "debug.h"
 #include <assert.h>
 
-typedef name_of_function name_of_function;
+typedef enum name_of_function
+{
+	LDR,
+	LDRB,
+	LDRH,
+	STR,
+	STRB,
+	STRH,
+	LDM,
+	STM
+} name_of_function; 
 
 uint32_t get_index(arm_core p, uint32_t ins)
 {	uint8_t bit_3_0 = get_bits(ins, 3, 0);
