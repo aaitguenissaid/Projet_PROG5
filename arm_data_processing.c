@@ -255,7 +255,7 @@ void lsr_reg(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shift
 		*shifter_operand = (arm_read_register(p, get_rm(ins)));
 		*shifter_carry_out = get_C_flag(p);
 	}
-	else if ( get_data_rs_7_0(ins) < 32 ){
+	else if ( get_data_rs_7_0(p, ins) < 32 ){
 		*shifter_operand = (arm_read_register(p, get_rm(ins))) >> get_data_rs_7_0(p, ins);
 		*shifter_carry_out = get_bit(arm_read_register(p, get_rm(ins)), (get_data_rs_7_0(p, ins) - 1));
 	}
@@ -620,7 +620,7 @@ int ins_CMP(arm_core p, uint32_t ins){
 	uint32_t shifter_operand = 0;
 	uint8_t shifter_carry_out = 0;
 
-	if ( condition_passed(ins)){ 
+	if ( condition_passed(p, ins)){ 
 		get_shifter_operand_carry_out(p, ins, &shifter_operand, &shifter_carry_out);
 		uint32_t alu_out = arm_read_register(p, get_rn(ins)) - shifter_operand;
 		uint8_t N_Flag = get_bit(alu_out,31);
@@ -636,7 +636,7 @@ int ins_CMN(arm_core p, uint32_t ins){
 	uint32_t shifter_operand = 0;
 	uint8_t shifter_carry_out = 0;
 
-	if ( condition_passed(ins)){ 
+	if ( condition_passed(p, ins)){ 
 		get_shifter_operand_carry_out(p, ins, &shifter_operand, &shifter_carry_out);
 		uint32_t alu_out = arm_read_register(p, get_rn(ins)) + shifter_operand;
 		uint8_t N_Flag = get_bit(alu_out,31);
@@ -652,7 +652,7 @@ int ins_ORR(arm_core p, uint32_t ins){
 	uint32_t shifter_operand = 0;
 	uint8_t shifter_carry_out = 0;
 
-	if ( condition_passed(ins)){
+	if ( condition_passed(p, ins)){
 		get_shifter_operand_carry_out(p, ins, &shifter_operand, &shifter_carry_out);
 		int32_t valeur = arm_read_register(p, get_rn(ins)) | shifter_operand ;
 		arm_write_register(p, get_rd(ins), valeur);
@@ -678,7 +678,7 @@ int ins_MOV(arm_core p, uint32_t ins){
 	uint32_t shifter_operand = 0;
 	uint8_t shifter_carry_out = 0;
 
-	if ( condition_passed(ins)){
+	if ( condition_passed(p, ins)){
 		get_shifter_operand_carry_out(p, ins, &shifter_operand, &shifter_carry_out);
 		arm_write_register(p, get_rd(ins), shifter_operand);
 		if (bit_S(ins) == 1 && get_rd(ins) == 15){
