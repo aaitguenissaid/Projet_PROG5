@@ -25,6 +25,17 @@ Contact: Guillaume.Huard@imag.fr
 #include <stdint.h>
 #include "arm_core.h"
 #define CP15_reg1_Ubit 1
+enum name_of_function
+{
+	LDR,
+	LDRB,
+	LDRH,
+	STR,
+	STRB,
+	STRH,
+	LDM,
+	STM
+} ; 
 
 /*
    get_index 
@@ -96,7 +107,7 @@ uint32_t get_address_h(arm_core p,uint32_t ins);
    valeur de retour : LDR, STR, LDRB, STRB, LDRH, STRH, LDM, STM.
    effets de bord : 
 */
-name_of_function get_func(uint32_t ins);
+enum name_of_function get_func(uint32_t ins);
 
 /*
    condition_passed
@@ -150,7 +161,7 @@ void set_t_bit(arm_core p,uint8_t x);
    valeur de retour : une addresse
    effets de bord : 
 */
-uint32_t get_address_from_name(arm_core p, uint32_t ins, name_of_function name);
+uint32_t get_address_from_name(arm_core p, uint32_t ins, enum name_of_function name);
 
 /*
    arm_load_store
@@ -178,21 +189,5 @@ int arm_load_store_multiple(arm_core p, uint32_t ins);
 */
 int arm_coprocessor_load_store(arm_core p, uint32_t ins);
 
-/*
-   set_t_bit
-   description :  mettre en place bit T
-   parametres : arm p et x bit a deposer.
-   valeur de retour : rien.
-   effets de bord : Registr CPRS modifier.
-*/
-void set_t_bit(arm_core p,uint8_t x);
 
-/*
-   get_address_from_name
-   description : décoder l'instruction pour LDR|STR{<cond>}H|SH|SB|D et LDR|STR{<cond>}{B}{T}
-   parametres : arm p  , instruction ins et nom de function .
-   valeur de retour : adresse.
-   effets de bord : si la condition satisfait, on écrit valeur dans le registre Rn.
-*/
-uint32_t get_address_from_name(arm_core p,uint32_t ins,name_of_function name);
 #endif

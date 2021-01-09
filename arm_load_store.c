@@ -27,17 +27,7 @@ Contact: Guillaume.Huard@imag.fr
 #include "debug.h"
 #include <assert.h>
 
-typedef enum 
-{
-	LDR,
-	LDRB,
-	LDRH,
-	STR,
-	STRB,
-	STRH,
-	LDM,
-	STM
-} name_of_function;
+typedef name_of_function name_of_function;
 
 uint32_t get_index(arm_core p, uint32_t ins)
 {	uint8_t bit_3_0 = get_bits(ins, 3, 0);
@@ -255,14 +245,14 @@ void set_t_bit(arm_core p,uint8_t x){
 	arm_write_cpsr(p, cprs);
 }
 
-uint32_t get_address_from_name(arm_core p,uint32_t ins,name_of_function name){
+uint32_t get_address_from_name(arm_core p,uint32_t ins, enum name_of_function name){
 	if(name == LDRH || name == STRH)
 		return get_address_h(p, ins);
 	else
 		return get_address(p, ins);
 }
 
-name_of_function get_func(uint32_t ins)
+enum name_of_function get_func(uint32_t ins)
 {
 	if (get_bits(ins, 27, 26) == 0x1)
 	{
