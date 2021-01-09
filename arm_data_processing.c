@@ -130,13 +130,12 @@ uint64_t operation(uint64_t operand1, uint64_t operand2, int op){
 	uint64_t valeur = 0;
 	if (op == 1){	// addition
 		valeur = operand1 + operand2;
-		return valeur;
 	}
-	if (op == 2){	// soustraction
+	else if (op == 2){	// soustraction
 		uint32_t ca2_operand2 = two_complement(operand2);
 		valeur = operand1 + (uint64_t)ca2_operand2;
-		return valeur;
 	}
+	return valeur;
 }
 
 int borrow_from(uint32_t operand1, uint32_t operand2){
@@ -182,13 +181,15 @@ int carry_from(uint32_t operand1, uint32_t operand2, int op){
 			return 0;
 		}
 	}
-	if ( op == 2){	// soustraction
+	else if ( op == 2){	// soustraction
 		if (signe_valeur == 0)
 			return 1;
 		else{
 			return 0;
 		}
 	}
+	else 
+		return 0;
 }
 
 /*-------------------------- addressing modes --------------------------*/
