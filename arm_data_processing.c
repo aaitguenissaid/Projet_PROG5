@@ -428,7 +428,7 @@ int ins_SUB(arm_core p, uint32_t ins){
 	
 	if (condition_passed(p, ins)){
 		get_shifter_operand_carry_out(p, ins, &shifter_operand, &shifter_carry_out);
-		uint32_t valeur = arm_read_register(p, get_rn(ins)) - shifter_operand ;
+		uint32_t valeur = (uint32_t)operation((uint64_t)arm_read_register(p, get_rn(ins)), (uint64_t)shifter_operand, 2);
 		arm_write_register(p, get_rd(ins), valeur);
 		
 		if (bit_S(ins) == 1 && get_rd(ins) == 15){
