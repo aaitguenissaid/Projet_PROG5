@@ -46,27 +46,27 @@ static int arm_execute_instruction(arm_core p) {
 
     //fetch
     // ri Registre d'instruction (Variable local)
-    uint32_t *ri=NULL;
-    int exception = arm_fetch(p, *ri);
+    uint32_t ri;
+    int exception = arm_fetch(p, &ri);
     if(exception != 0){
       return PREFETCH_ABORT;
     }
     //decode 27 - 25
-     uint8_t opcode = (uint8_t) get_bits(*ri, 27, 25);
+     uint8_t opcode = (uint8_t) get_bits(ri, 27, 25);
 
     if(condition_passed(p, ri)){
       switch(opcode){
         case 0x00:
-        if(get_bit(ri, 4)==0)) {  // bit_4 = 0
-            if(get_bits(ri, 24, 23)==2 && get_bit(ri, 20)==0)){ //  Miscellaneous instructions
-              return arm_miscellaneous(p, ins);
+        if(get_bit(ri, 4)==0) {  // bit_4 = 0
+            if(get_bits(ri, 24, 23)==2 && get_bit(ri, 20)==0){ //  Miscellaneous instructions
+              return arm_miscellaneous(p, ri);
             } else { //  Data processing immediate shift
-              return arm_data_processing_immediate_msr(p, ins);
+              return arm_data_processing_immediate_msr(p, ri);
             }
         } else { // bit_4 = 1
-            if(get_bit(ri, 7)==0)){
+            if(get_bit(ri, 7)==0){
                 if(get_bits(ri, 24, 23)==2 && get_bit(ri, 20)==1){  //  Miscellaneous instructions
-                  return arm_miscellaneous(p, ins);
+                  return arm_miscellaneous(p, ri);
                 } else { // Data processing register shift [2]
 
                 }
@@ -89,13 +89,13 @@ static int arm_execute_instruction(arm_core p) {
         break;
         // Load/store immediate offset
         case 0x02:
-          return arm_load_store(p, ins);
+          return arm_load_store(p, ri);
         break;
         case 0x03:
-        if(get_bit(ri, 4)==0)) {  //  Load/store register offset
-          return arm_load_store(p, ins);
+        if(get_bit(ri, 4)==0) {  //  Load/store register offset
+          return arm_load_store(p, ri);
         } else {
-          if(get_bits(ri, 24, 20)==0x1F && if(get_bits(ri, 7, 5)==0x07)){ // Architecturally undefined
+          if(get_bits(ri, 24, 20)==0x1F && get_bits(ri, 7, 5)==0x07){ // Architecturally undefined
             return UNDEFINED_INSTRUCTION;
           } else { // Media instructions [4]: See Figure A3-2
 //############ ??????????
@@ -104,15 +104,15 @@ static int arm_execute_instruction(arm_core p) {
         break;
         //Load/store multiple
         case 0x04:
-          return arm_load_store_multiple(p, ins);
+          return arm_load_store_multiple(p, ri);
         break;
         //Branch and branch with link
         case 0x05:
-          arm_branch(p, ins);
+          arm_branch(p, ri);
         break;
         //Coprocessor load/store and double register transfers
         case 0x06:
-          return arm_load_store(arm_core p, uint32_t ins);
+          return arm_load_store(p, ri);
         break;
         case 0x07:
         if(get_bit(ri,24)==0){
