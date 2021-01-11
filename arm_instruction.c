@@ -68,7 +68,7 @@ static int arm_execute_instruction(arm_core p) {
                 if(get_bits(ri, 24, 23)==2 && get_bit(ri, 20)==1){  //  Miscellaneous instructions
                   return arm_miscellaneous(p, ri);
                 } else { // Data processing register shift [2]
-
+//############ ??????????
                 }
             } else { // bit_7 = 1 Multiplies: See Figure A3-3
                     //Extra load/stores: See Figure A3-5
@@ -79,7 +79,7 @@ static int arm_execute_instruction(arm_core p) {
         case 0x01:
         if(get_bits(ri, 24, 23)==2) {
           if(get_bits(ri, 22, 21)==2) { // Move immediate to status register
-
+//############ ??????????
           } else { // Undefined instruction
             return UNDEFINED_INSTRUCTION;
           }
