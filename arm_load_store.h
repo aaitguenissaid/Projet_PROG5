@@ -98,14 +98,6 @@ uint32_t get_address_h(arm_core p,uint32_t ins);
 */
 enum name_of_function get_func(uint32_t ins);
 
-/*
-   condition_passed
-   description : tester le condition de instruction satisfait ou pas 
-   parametres : arm p et instruction ins.
-   valeur de retour : 0 pas satisfait et 1 satisfait.
-   effets de bord : 
-*/
-int condition_passed(arm_core p, uint32_t ins);
 
 /*
    number_of_set_bits
