@@ -112,7 +112,7 @@ static int arm_execute_instruction(arm_core p) {
         break;
         //Coprocessor load/store and double register transfers
         case 0x06:
-          return arm_load_store(p, ri);
+          return arm_coprocessor_load_store(p, ri);
         break;
         case 0x07:
         if(get_bit(ri,24)==0){
