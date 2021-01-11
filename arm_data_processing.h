@@ -331,7 +331,7 @@ void get_shifter_operand_carry_out(arm_core p, uint32_t ins, uint32_t *shifter_o
    valeur de retour : 
    effets de bord : modifier les valeurs shifter_operand et shifter_carry_out
 */
-void update_flags_cpsr(arm_core p, uint8_t N_Flag, uint8_t Z_Flag, uint8_t C_Flag, uint8_t V_Flag);
+void update_flags_cpsr(arm_core p, int N_Flag, int Z_Flag, int C_Flag, int V_Flag);
 
 /*
    description : Les instructions de data-processing

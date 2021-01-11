@@ -114,10 +114,13 @@ uint8_t get_data_rs_7_0(arm_core p, uint32_t ins){
 	return valeur;
 }
 
-void update_flags_cpsr(arm_core p, uint8_t N_Flag, uint8_t Z_Flag, uint8_t C_Flag, uint8_t V_Flag){
-	//uint32_t val_CPSR = arm_read_cpsr(p);
-	uint32_t new_val_CPSR = (N_Flag << N) | (Z_Flag << Z) | (C_Flag << C) | (V_Flag << V);
-	arm_write_cpsr(p, new_val_CPSR);
+void update_flags_cpsr(arm_core p, int N_Flag, int Z_Flag, int C_Flag, int V_Flag){
+	uint32_t val_cpsr = arm_read_cpsr(p);
+	val_cpsr = N_Flag == 1 ? set_bit(val_cpsr, N) : clr_bit(val_cpsr, N);
+	val_cpsr = Z_Flag == 1 ? set_bit(val_cpsr, Z) : clr_bit(val_cpsr, Z);
+	val_cpsr = C_Flag == 1 ? set_bit(val_cpsr, C) : clr_bit(val_cpsr, C);
+	val_cpsr = V_Flag == 1 ? set_bit(val_cpsr, V) : clr_bit(val_cpsr, V);
+	arm_write_cpsr(p, val_cpsr);
 }
 
 uint32_t two_complement(uint32_t operand){
@@ -386,10 +389,10 @@ int ins_AND(arm_core p, uint32_t ins){
 			}
 		}
 		else if (bit_S(ins) == 1){
-			uint8_t N_Flag = get_bit(arm_read_register(p, get_rd(ins)),31);
-			uint8_t Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
-			uint8_t C_Flag = shifter_carry_out;
-			uint8_t V_Flag = (arm_read_cpsr(p) >> 28) & 1;
+			int N_Flag = get_bit(arm_read_register(p, get_rd(ins)),31);
+			int Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
+			int C_Flag = shifter_carry_out;
+			int V_Flag = (arm_read_cpsr(p) >> 28) & 1;
 			update_flags_cpsr(p, N_Flag, Z_Flag, C_Flag, V_Flag);
 		}
 	}
@@ -412,10 +415,10 @@ int ins_EOR(arm_core p, uint32_t ins){
 			}
 		}
 		else if (bit_S(ins) == 1){
-			uint8_t N_Flag = get_bit(arm_read_register(p, get_rd(ins)),31);
-			uint8_t Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
-			uint8_t C_Flag = shifter_carry_out;
-			uint8_t V_Flag = get_bit(arm_read_cpsr(p), V);  //unaffected
+			int N_Flag = get_bit(arm_read_register(p, get_rd(ins)),31);
+			int Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
+			int C_Flag = shifter_carry_out;
+			int V_Flag = get_bit(arm_read_cpsr(p), V);  //unaffected
 			update_flags_cpsr(p, N_Flag, Z_Flag, C_Flag, V_Flag);
 		}
 	}
@@ -439,10 +442,10 @@ int ins_SUB(arm_core p, uint32_t ins){
 			}
 		}
 		else if (bit_S(ins) == 1){
-			uint8_t N_Flag = get_bit(arm_read_register(p, get_rd(ins)),31);
-			uint8_t Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
-			uint8_t C_Flag = ~borrow_from(arm_read_register(p, get_rn(ins)), shifter_operand)&1;
-			uint8_t V_Flag = overflow_from(arm_read_register(p, get_rn(ins)), shifter_operand,2);
+			int N_Flag = get_bit(arm_read_register(p, get_rd(ins)),31);
+			int Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
+			int C_Flag = ~borrow_from(arm_read_register(p, get_rn(ins)), shifter_operand)&1;
+			int V_Flag = overflow_from(arm_read_register(p, get_rn(ins)), shifter_operand,2);
 			update_flags_cpsr(p, N_Flag, Z_Flag, C_Flag, V_Flag);
 		}
 	}
@@ -466,10 +469,10 @@ int ins_RSB(arm_core p, uint32_t ins){
 			}
 		}
 		else if (bit_S(ins) == 1){
-			uint8_t N_Flag = get_bit(arm_read_register(p, get_rd(ins)),31);
-			uint8_t Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
-			uint8_t C_Flag = ~borrow_from(shifter_operand, arm_read_register(p, get_rn(ins)))&1;
-			uint8_t V_Flag = overflow_from(shifter_operand, arm_read_register(p, get_rn(ins)),2);
+			int N_Flag = get_bit(arm_read_register(p, get_rd(ins)),31);
+			int Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
+			int C_Flag = ~borrow_from(shifter_operand, arm_read_register(p, get_rn(ins)))&1;
+			int V_Flag = overflow_from(shifter_operand, arm_read_register(p, get_rn(ins)),2);
 			update_flags_cpsr(p, N_Flag, Z_Flag, C_Flag, V_Flag);
 		}
 	}
@@ -494,10 +497,10 @@ int ins_ADD(arm_core p, uint32_t ins){
 			}
 		}
 		else if (bit_S(ins) == 1){
-			uint8_t N_Flag = get_bit(arm_read_register(p, get_rd(ins)),31);
-			uint8_t Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
-			uint8_t C_Flag = carry_from(shifter_operand, arm_read_register(p, get_rn(ins)),1);
-			uint8_t V_Flag = overflow_from(arm_read_register(p, get_rn(ins)), shifter_operand, 1);
+			int N_Flag = get_bit(arm_read_register(p, get_rd(ins)),31);
+			int Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
+			int C_Flag = carry_from(shifter_operand, arm_read_register(p, get_rn(ins)),1);
+			int V_Flag = overflow_from(arm_read_register(p, get_rn(ins)), shifter_operand, 1);
 			update_flags_cpsr(p, N_Flag, Z_Flag, C_Flag, V_Flag);
 		}
 	}
@@ -520,10 +523,10 @@ int ins_ADC(arm_core p, uint32_t ins){
 			}
 		}
 		else if (bit_S(ins) == 1){
-			uint8_t N_Flag = get_bit(arm_read_register(p, get_rd(ins)),31);
-			uint8_t Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
-			uint8_t C_Flag = carry_from(arm_read_register(p, get_rn(ins)), (shifter_operand + get_C_flag(p)),1);
-			uint8_t V_Flag = overflow_from(arm_read_register(p, get_rn(ins)), (shifter_operand + get_C_flag(p)), 1);
+			int N_Flag = get_bit(arm_read_register(p, get_rd(ins)),31);
+			int Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
+			int C_Flag = carry_from(arm_read_register(p, get_rn(ins)), (shifter_operand + get_C_flag(p)),1);
+			int V_Flag = overflow_from(arm_read_register(p, get_rn(ins)), (shifter_operand + get_C_flag(p)), 1);
 			update_flags_cpsr(p, N_Flag, Z_Flag, C_Flag, V_Flag);
 		}
 	}
@@ -575,10 +578,10 @@ int ins_RSC(arm_core p, uint32_t ins){
 			}
 		}
 		else if (bit_S(ins) == 1){
-			uint8_t N_Flag = get_bit(arm_read_register(p, get_rd(ins)),31);
-			uint8_t Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
-			uint8_t C_Flag = ~borrow_from(shifter_operand, (arm_read_register(p, get_rn(ins))+ get_C_flag(p)))&1;
-			uint8_t V_Flag = overflow_from(shifter_operand, (arm_read_register(p, get_rn(ins))+ get_C_flag(p)), 2);
+			int N_Flag = get_bit(arm_read_register(p, get_rd(ins)),31);
+			int Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
+			int C_Flag = ~borrow_from(shifter_operand, (arm_read_register(p, get_rn(ins))+ get_C_flag(p)))&1;
+			int V_Flag = overflow_from(shifter_operand, (arm_read_register(p, get_rn(ins))+ get_C_flag(p)), 2);
 			update_flags_cpsr(p, N_Flag, Z_Flag, C_Flag, V_Flag);
 		}
 	}
@@ -591,11 +594,11 @@ int ins_TST(arm_core p, uint32_t ins){
 
 	if ( condition_passed(p, ins) ){
 		get_shifter_operand_carry_out(p, ins, &shifter_operand, &shifter_carry_out);
-		uint32_t alu_out = arm_read_register(p, get_rn(ins)) & shifter_operand;
-		uint8_t N_Flag = get_bit(alu_out,31);
-		uint8_t Z_Flag = alu_out == 0 ? 1 : 0;
-		uint8_t C_Flag = shifter_carry_out;
-		uint8_t V_Flag = get_bit(arm_read_cpsr(p), V);	//unaffected
+		int alu_out = arm_read_register(p, get_rn(ins)) & shifter_operand;
+		int N_Flag = get_bit(alu_out,31);
+		int Z_Flag = alu_out == 0 ? 1 : 0;
+		int C_Flag = shifter_carry_out;
+		int V_Flag = get_bit(arm_read_cpsr(p), V);	//unaffected
 		update_flags_cpsr(p, N_Flag, Z_Flag, C_Flag, V_Flag);
 	}
 	return 1;
@@ -607,11 +610,11 @@ int ins_TEQ(arm_core p, uint32_t ins){
 
 	if ( condition_passed(p, ins) ){
 		get_shifter_operand_carry_out(p, ins, &shifter_operand, &shifter_carry_out);
-		uint32_t alu_out = arm_read_register(p, get_rn(ins)) ^ shifter_operand;
-		uint8_t N_Flag = get_bit(alu_out,31);
-		uint8_t Z_Flag = alu_out == 0 ? 1 : 0;
-		uint8_t C_Flag = shifter_carry_out;
-		uint8_t V_Flag = get_bit(arm_read_cpsr(p), V);	//unaffected
+		int alu_out = arm_read_register(p, get_rn(ins)) ^ shifter_operand;
+		int N_Flag = get_bit(alu_out,31);
+		int Z_Flag = alu_out == 0 ? 1 : 0;
+		int C_Flag = shifter_carry_out;
+		int V_Flag = get_bit(arm_read_cpsr(p), V);	//unaffected
 		update_flags_cpsr(p, N_Flag, Z_Flag, C_Flag, V_Flag);
 	}
 	return 1;
@@ -623,11 +626,11 @@ int ins_CMP(arm_core p, uint32_t ins){
 
 	if ( condition_passed(p, ins)){
 		get_shifter_operand_carry_out(p, ins, &shifter_operand, &shifter_carry_out);
-		uint32_t alu_out = arm_read_register(p, get_rn(ins)) - shifter_operand;
-		uint8_t N_Flag = get_bit(alu_out,31);
-		uint8_t Z_Flag = alu_out == 0 ? 1 : 0;
-		uint8_t C_Flag = carry_from(arm_read_register(p, get_rn(ins)), shifter_operand, 1);
-		uint8_t V_Flag = overflow_from(arm_read_register(p, get_rn(ins)), shifter_operand, 0);
+		int alu_out = arm_read_register(p, get_rn(ins)) - shifter_operand;
+		int N_Flag = get_bit(alu_out,31);
+		int Z_Flag = alu_out == 0 ? 1 : 0;
+		int C_Flag = carry_from(arm_read_register(p, get_rn(ins)), shifter_operand, 1);
+		int V_Flag = overflow_from(arm_read_register(p, get_rn(ins)), shifter_operand, 0);
 		update_flags_cpsr(p, N_Flag, Z_Flag, C_Flag, V_Flag);
 	}
 	return 1;
@@ -639,11 +642,11 @@ int ins_CMN(arm_core p, uint32_t ins){
 
 	if ( condition_passed(p, ins)){
 		get_shifter_operand_carry_out(p, ins, &shifter_operand, &shifter_carry_out);
-		uint32_t alu_out = arm_read_register(p, get_rn(ins)) + shifter_operand;
-		uint8_t N_Flag = get_bit(alu_out,31);
-		uint8_t Z_Flag = alu_out == 0 ? 1 : 0;
-		uint8_t C_Flag = carry_from(arm_read_register(p, get_rn(ins)), shifter_operand, 1);
-		uint8_t V_Flag = overflow_from(arm_read_register(p, get_rn(ins)), shifter_operand,1);
+		int alu_out = arm_read_register(p, get_rn(ins)) + shifter_operand;
+		int N_Flag = get_bit(alu_out,31);
+		int Z_Flag = alu_out == 0 ? 1 : 0;
+		int C_Flag = carry_from(arm_read_register(p, get_rn(ins)), shifter_operand, 1);
+		int V_Flag = overflow_from(arm_read_register(p, get_rn(ins)), shifter_operand,1);
 		update_flags_cpsr(p, N_Flag, Z_Flag, C_Flag, V_Flag);
 	}
 	return 1;
@@ -665,10 +668,10 @@ int ins_ORR(arm_core p, uint32_t ins){
 			}
 		}
 		else if (bit_S(ins) == 1){
-			uint8_t N_Flag = get_bit(arm_read_register(p, get_rd(ins)),31);
-			uint8_t Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
-			uint8_t C_Flag = shifter_carry_out;
-			uint8_t V_Flag = get_bit(arm_read_cpsr(p), V);	//unaffected
+			int N_Flag = get_bit(arm_read_register(p, get_rd(ins)),31);
+			int Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
+			int C_Flag = shifter_carry_out;
+			int V_Flag = get_bit(arm_read_cpsr(p), V);	//unaffected
 			update_flags_cpsr(p, N_Flag, Z_Flag, C_Flag, V_Flag);
 		}
 	}
@@ -690,10 +693,10 @@ int ins_MOV(arm_core p, uint32_t ins){
 			}
 		}
 		else if (bit_S(ins) == 1){
-			uint8_t N_Flag = get_bit(arm_read_register(p, get_rd(ins)),31);
-			uint8_t Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
-			uint8_t C_Flag = shifter_carry_out;
-			uint8_t V_Flag = get_bit(arm_read_cpsr(p), V);	//unaffected
+			int N_Flag = get_bit(arm_read_register(p, get_rd(ins)),31);
+			int Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
+			int C_Flag = shifter_carry_out;
+			int V_Flag = get_bit(arm_read_cpsr(p), V);	//unaffected
 			update_flags_cpsr(p, N_Flag, Z_Flag, C_Flag, V_Flag);
 		}
 	}
@@ -716,10 +719,10 @@ int ins_BIC(arm_core p, uint32_t ins){
 			}
 		}
 		else if (bit_S(ins) == 1){
-			uint8_t N_Flag = get_bit(arm_read_register(p, get_rd(ins)),31);
-			uint8_t Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
-			uint8_t C_Flag = shifter_carry_out;
-			uint8_t V_Flag = get_bit(arm_read_cpsr(p), V);	//unaffected
+			int N_Flag = get_bit(arm_read_register(p, get_rd(ins)),31);
+			int Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
+			int C_Flag = shifter_carry_out;
+			int V_Flag = get_bit(arm_read_cpsr(p), V);	//unaffected
 			update_flags_cpsr(p, N_Flag, Z_Flag, C_Flag, V_Flag);
 		}
 	}
@@ -741,10 +744,10 @@ int ins_MVN(arm_core p, uint32_t ins){
 			}
 		}
 		else if (bit_S(ins) == 1){
-			uint8_t N_Flag = get_bit(arm_read_register(p, get_rd(ins)),31);
-			uint8_t Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
-			uint8_t C_Flag = shifter_carry_out;
-			uint8_t V_Flag = get_bit(arm_read_cpsr(p), V);	//unaffected
+			int N_Flag = get_bit(arm_read_register(p, get_rd(ins)),31);
+			int Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
+			int C_Flag = shifter_carry_out;
+			int V_Flag = get_bit(arm_read_cpsr(p), V);	//unaffected
 			update_flags_cpsr(p, N_Flag, Z_Flag, C_Flag, V_Flag);
 		}
 	}
