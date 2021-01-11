@@ -22,3 +22,9 @@
 05/01/2021 : Développement de différentes versions de la structure "registers" en équipe, choix d'une version, répartition des tâches suivantes (cf Kanban)
 
 06/01/2021 : Analyse de la documentation pour comprendre les instructions et le travail à faire. Spécification des fichiers d'en-tête nous concernant.
+
+07/01/2021 : Développement des parties individuelles (arm_instruction, arm_load_store, arm_data_processing, arm_branch_other)
+
+08/01/2021 : Développement des parties individuelles (arm_instruction, arm_load_store, arm_data_processing, arm_branch_other)
+
+11/01/2021 : Appel de groupe et tentatives d'exécution des programmes d'exemple, correction de bugs
