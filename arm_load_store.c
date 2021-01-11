@@ -448,12 +448,12 @@ int arm_load_store(arm_core p, uint32_t ins)
 			{
 				if (CP15_reg1_Ubit == 0) {
 					if (arm_read_word(p, address, &data) != 0)
-						printf("ERROR");
+						return -1;
 					uint8_t bits_1_0 = get_bits(address, 1, 0);
 					data = ror(data, 8 * bits_1_0);
 				}else{
 					if (arm_read_word(p, address, &data) != 0)
-						printf("ERROR");
+						return -1;
 				}
 				if (Rd == 0x0F){
 					arm_write_register(p, (uint8_t)PC, (data & 0xFFFFFFFE));
@@ -466,20 +466,20 @@ int arm_load_store(arm_core p, uint32_t ins)
 			case STR:
 			{
 				if (arm_write_word(p, address, RdVal) != 0)
-					printf("ERROR");
+					return -1;
 				return 0;
 			}
 			case LDRB:
 			{
 				if (arm_read_byte(p, address, &byte) != 0)
-					printf("ERROR");
+					return -1;
 				arm_write_register(p, Rd, (uint32_t)byte);
 				return 0;
 			}
 			case STRB:
 			{
 				if (arm_write_byte(p, address, (uint8_t)get_bits(RdVal, 7, 0)) != 0)
-					printf("ERROR");
+					return -1;
 				return 0;
 
 			}
@@ -488,13 +488,13 @@ int arm_load_store(arm_core p, uint32_t ins)
 				if (CP15_reg1_Ubit == 0){
 					if (get_bit(address, 0) == 0x00){
 						if (arm_read_half(p, address, &half) != 0)
-							printf("ERROR");
+							return -1;
 					}else{
 						half = 0x00; //UNPREDICTABLE
 					}
 				}else{
 					if (arm_read_half(p, address, &half) != 0)
-						printf("ERROR");
+						return -1;
 				}
 				arm_write_register(p, Rd, (uint32_t)half);
 				return 0;
@@ -504,14 +504,14 @@ int arm_load_store(arm_core p, uint32_t ins)
 				if (CP15_reg1_Ubit == 0){
 					if (get_bit(address, 0) == 0){
 						if (arm_write_half(p, address, (uint16_t)get_bits(RdVal, 15, 0)) != 0)
-							printf("ERROR");
+							return -1;
 					}else{
 						if (arm_write_half(p, address, (uint16_t)0x00) != 0)
-							printf("ERROR");
+							return -1;
 					}
 				}else{
 					if (arm_write_half(p, address, (uint16_t)get_bits(RdVal, 15, 0)) != 0)
-						printf("ERROR");
+						return -1;
 				}
 			return 0;
 			}
@@ -543,7 +543,7 @@ int arm_load_store_multiple(arm_core p, uint32_t ins)
 					if (get_bit(ins, i) == 1)
 					{
 						if (arm_read_word(p, address, &data) != 0)
-							printf("ERROR");
+							return -1;
 						arm_write_register(p, i, data);
 						address = address + 4;
 					}
@@ -551,7 +551,7 @@ int arm_load_store_multiple(arm_core p, uint32_t ins)
 				if (get_bit(ins, 15) == 1){
 					uint32_t value = 0;
 					if (arm_read_word(p, address, &value) != 0)
-						printf("ERROR");
+						return -1;
 					arm_write_register(p, (uint8_t)PC, (value & 0xFFFFFFFE));
 					set_t_bit(p,get_bit(data, 0));
 					address = address + 4;
@@ -568,7 +568,7 @@ int arm_load_store_multiple(arm_core p, uint32_t ins)
 					{
 						uint32_t Ri_val = arm_read_register(p, i);
 						if (arm_write_word(p, address, Ri_val) != 0)
-							printf("ERROR");
+							return -1;
 						address = address + 4;
 					}
 				}
@@ -585,8 +585,5 @@ int arm_load_store_multiple(arm_core p, uint32_t ins)
 
 int arm_coprocessor_load_store(arm_core p, uint32_t ins)
 {
-	if (get_bit(ins, 27))
-		return arm_load_store_multiple(p, ins);
-	else
-		return arm_load_store(p, ins);
+	return UNDEFINED_INSTRUCTION;
 }
