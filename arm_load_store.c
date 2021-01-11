@@ -45,8 +45,7 @@ uint32_t get_index(arm_core p, uint32_t ins)
 	uint8_t shift_imm = get_bits(ins, 11, 7);
 	uint8_t shift_ind = get_bits(ins, 6, 5);
 	uint32_t index;
-	switch (shift_ind)
-	{
+	switch (shift_ind){
 	case 0: /* LSL */
 		index = rm << shift_imm;
 		break;
@@ -97,7 +96,6 @@ void add_substract(int u, uint32_t *adr, uint32_t op_gauche, uint32_t op_droit)
 
 void condtion_pass_modify(arm_core p, uint32_t ins, uint32_t op_droit)
 {
-
 	uint32_t Rn_write;
 	int u = get_bit(ins, 23);
 	uint32_t rn = arm_read_register(p, (uint8_t)get_bits(ins, 19, 16));
@@ -301,8 +299,7 @@ int condition_passed(arm_core p, uint32_t ins)
 	uint8_t z = get_bit(cpsr, 30);
 	uint8_t c = get_bit(cpsr, 29);
 	uint8_t v = get_bit(cpsr, 28);
-	switch (cond)
-	{
+	switch (cond){
 		case 0x00:
 			return z == 0x01; //0000  EQ       Equal                               Z set
 		case 0x01:
@@ -353,7 +350,6 @@ uint32_t number_of_set_bits(uint32_t ins){
 
 void condtion_pass_modify_w(arm_core p, uint32_t ins, uint32_t op_droit, int op)
 {
-
 	uint32_t Rn_write;
 	uint32_t rn = arm_read_register(p, (uint8_t)get_bits(ins, 19, 16));
 	if(op)
@@ -361,7 +357,6 @@ void condtion_pass_modify_w(arm_core p, uint32_t ins, uint32_t op_droit, int op)
 	else
 		Rn_write = rn - op_droit;
 	arm_write_register(p, (uint8_t)get_bits(ins, 19, 16), Rn_write);
-
 }
 
 void get_start_end_address(arm_core p, uint32_t ins, uint32_t *start_address, uint32_t *end_address){
@@ -370,8 +365,7 @@ void get_start_end_address(arm_core p, uint32_t ins, uint32_t *start_address, ui
 		int bits_24_23 = get_bits(ins, 24, 23);
 		uint32_t rn = arm_read_register(p, (uint8_t)get_bits(ins, 19, 16));
 		uint32_t register_list = number_of_set_bits(ins) * 4;
-		switch (bits_24_23)
-		{
+		switch (bits_24_23){
 			case 0:
 				/* Load and Store Multiple - Decrement after */
 				*start_address = rn - register_list + 4;
@@ -414,8 +408,7 @@ int arm_load_store(arm_core p, uint32_t ins)
 	uint16_t half = 0;
 	uint32_t RdVal = arm_read_register(p, Rd);
 	uint32_t address = get_address_from_name(p, ins, name);
-	switch (name)
-	{
+	switch (name){
 		case LDR:
 		{
 			if (CP15_reg1_Ubit == 0) {
@@ -504,8 +497,7 @@ int arm_load_store_multiple(arm_core p, uint32_t ins)
 	uint32_t data = 0;
 	name_of_function name = get_func(ins);
 	address = start_address;
-	switch (name)
-	{
+	switch (name){
 		case LDM:
 		{
 			uint8_t i;
