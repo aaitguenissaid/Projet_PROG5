@@ -28,3 +28,5 @@
 08/01/2021 : Développement des parties individuelles (arm_instruction, arm_load_store, arm_data_processing, arm_branch_other)
 
 11/01/2021 : Appel de groupe et tentatives d'exécution des programmes d'exemple, correction de bugs
+
+12/01/2021 : Correction des bugs restants, répartition des dernières tâches, début du travail sur les exceptions
