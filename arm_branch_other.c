@@ -73,7 +73,7 @@ int arm_coprocessor_others_swi(arm_core p, uint32_t ins) {
 	if (get_bits(ins, 27, 24) == 0xF) { //Condition initiale : get_bit(ins, 24)
         	/* Here we implement the end of the simulation as swi 0x123456 */
 		if ((ins & 0xFFFFFF) == 0x123456)
-			exit(0);
+			exit(SOFTWARE_INTERRUPT);
 		else {
 			//ENTERING SUPERVISOR MODE
 			uint32_t cpsr_value = arm_read_register(p, CPSR);
