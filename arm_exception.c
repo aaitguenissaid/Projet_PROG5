@@ -35,7 +35,7 @@ Contact: Guillaume.Huard@imag.fr
 
 static void change_mode(arm_core p, uint8_t mode);
 static void save_cpsr(arm_core p, uint32_t cpsr);
-static void update_cpsr(arm_core p, uint32_t cpsr, uint8_t chg_6, uint8_t chg_8);
+static void update_cpsr(arm_core p, uint32_t cpsr, int8_t chg_6, int8_t chg_8);
 
 void arm_exception(arm_core p, unsigned char exception) {
 	uint32_t cpsr;
@@ -112,7 +112,7 @@ static void save_cpsr(arm_core p, uint32_t cpsr) {
 }
 
 //chg_i = -1 ==> do not change, chg_i = 0 ==> clear(i), chg_i = 1 ==> set(i)
-static void update_cpsr(arm_core p, uint32_t cpsr, uint8_t chg_6, uint8_t chg_8) {
+static void update_cpsr(arm_core p, uint32_t cpsr, int8_t chg_6, int8_t chg_8) {
 	cpsr = clr_bit(cpsr, 5); //Execute in ARM state
 	cpsr = (chg_6==-1) ? cpsr : ((chg_6) ? set_bit(cpsr,6) : clr_bit(cpsr,6));
 	cpsr = set_bit(cpsr, 7); //Disable normal interrupts
