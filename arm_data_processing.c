@@ -30,6 +30,8 @@ Contact: Guillaume.Huard@imag.fr
 
 /*-------------------------- Fonctions auxiliaires --------------------------*/
 
+
+
 uint8_t get_opcode(uint32_t ins){
 	uint8_t valeur = 0;
 	valeur = get_bits(ins, 24, 21);
@@ -113,6 +115,112 @@ uint8_t get_data_rs_7_0(arm_core p, uint32_t ins){
 	valeur = get_bits(arm_read_register(p, get_rs(ins)), 7, 0);
 	return valeur;
 }
+
+void get_operand_carryout(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out){
+	uint32_t Rm_value = arm_read_register(p, (uint8_t)get_bits(ins, 3, 0));
+	uint32_t Rs_value = arm_read_register(p, (uint8_t)get_bits(ins, 11, 8));
+	uint8_t shift_imm = get_bits(ins, 11, 7);
+	if(get_bits(ins, 27, 25) == 1){
+		// 1.Data-processing operands - Immediate
+		uint32_t immed_8 = get_bits(ins, 7, 0);
+		uint8_t rotate_imm = get_bits(ins, 11, 8);
+		*shifter_operand = ror(immed_8, rotate_imm*2);
+		if(rotate_imm == 0){
+			*shifter_carry_out = get_C_flag(p);
+		}else{
+			*shifter_carry_out = get_bit(*shifter_operand, 31);
+		} 
+	}
+	else if((get_bits(ins, 27, 25) == 0) && ((get_bits(ins, 11, 4) == 0))){
+		// 2.Data-processing operands - Register
+		*shifter_operand = Rm_value;
+		*shifter_carry_out = get_C_flag(p);
+	}
+	else if((get_bits(ins, 27, 25) == 0) && ((get_bits(ins, 6, 4) == 0))){
+		// 3.Data-processing operands - Logical shift left by immediate
+		if( shift_imm == 0){
+			*shifter_operand = Rm_value;
+			*shifter_carry_out = get_C_flag(p);
+		}else{
+			*shifter_operand = Rm_value << shift_imm;
+			*shifter_carry_out = get_bit(Rm_value, 32-shift_imm);
+		}
+	}
+	else if((get_bits(ins, 27, 25) == 0) && ((get_bits(ins, 6, 4) == 0))){
+		// 4.Data-processing operands - Logical shift left by register
+		if (get_bits(Rs_value, 7, 0) == 0){
+			*shifter_operand = Rm_value;
+			*shifter_carry_out = get_C_flag(p);
+		}else if(get_bits(Rs_value, 7, 0) < 32){
+			*shifter_operand = Rm_value >> get_bits(Rs_value, 7, 0);
+			*shifter_carry_out = get_bit(Rm_value, get_bits(Rs_value, 7, 0) - 1);
+		}else if(get_bits(Rs_value, 7, 0) == 32){
+			*shifter_operand = 0;
+			*shifter_carry_out = get_bit(Rm_value, 31);
+		}else{
+			*shifter_operand = 0;
+			*shifter_carry_out = get_bit(Rm_value, 31);
+		}		
+	}
+	else if	((get_bits(ins, 27, 25) == 0) && ((get_bits(ins, 6, 4) == 4))){
+		if(shift_imm == 0){
+			if(get_bit(Rm_value, 31) == 0){
+				*shifter_operand = 0;
+				*shifter_carry_out = get_bit(Rm_value, 31);
+			}else{
+				*shifter_operand = 0xFFFFFFFF;
+				*shifter_carry_out = get_bit(Rm_value, 31);
+			}			
+		}else{
+			*shifter_operand = asr(Rm_value, shift_imm);
+			*shifter_carry_out = get_bit(Rm_value, shift_imm-1);
+		}		
+	}
+	else if	((get_bits(ins, 27, 25) == 0) && ((get_bits(ins, 7, 4) == 5))){ 
+		if (get_bits(Rs_value, 7, 0) == 0){
+			*shifter_operand = Rm_value;
+			*shifter_carry_out = get_C_flag(p);
+		}else if(get_bits(Rs_value, 7, 0) < 32){
+			*shifter_operand = asr(Rm_value, (uint8_t) get_bits(Rs_value, 7, 0));
+			*shifter_carry_out = get_bit(Rm_value, get_bits(Rs_value, 7, 0) - 1);
+		}else if(get_bits(Rs_value, 7, 0) == 32){
+			*shifter_operand = 0;
+			*shifter_carry_out = get_bit(Rm_value, 31);
+		}else{
+			*shifter_operand = 0xFFFFFFFF;
+			*shifter_carry_out = get_bit(Rm_value, 31);
+		}
+	}		
+	else if	((get_bits(ins, 27, 25) == 0) && ((get_bits(ins, 6, 4) == 6))){
+		if (shift_imm == 0){
+//See “Data-processing operands - Rotate right with extend” on page A5-17
+		}           
+		else{
+			*shifter_operand = ror(Rm_value, shift_imm);
+			*shifter_carry_out = get_bit(Rm_value, shift_imm-1);
+		}
+	}
+	else if ((get_bits(ins, 27, 25) == 0) && ((get_bits(ins, 7, 4) == 7)))
+	{
+		if (get_bits(Rs_value, 7, 0) == 0){
+			*shifter_operand = Rm_value;
+			*shifter_carry_out = get_C_flag(p);
+		}else if(get_bits(Rs_value, 4, 0) == 0){
+			*shifter_operand = 0;
+			*shifter_carry_out = get_bit(Rm_value, 31);;
+		}else if(get_bits(Rs_value, 7, 0) == 32){
+			*shifter_operand = ror(Rm_value, (uint8_t) get_bits(Rs_value, 4, 0));
+			*shifter_carry_out = get_bit(Rm_value, get_bits(Rs_value, 4, 0) - 1);
+		}
+	}
+	else if ((get_bits(ins, 27, 25) == 0) && ((get_bits(ins, 11, 4) == 6))){
+		*shifter_operand = ((uint32_t)get_C_flag(p) << 31) | (Rm_value >> 1);
+		*shifter_carry_out = get_bit(Rm_value, 0);
+	}
+}
+
+
+
 
 void update_flags_cpsr(arm_core p, int N_Flag, int Z_Flag, int C_Flag, int V_Flag){
 	uint32_t val_cpsr = arm_read_cpsr(p);
@@ -668,8 +776,8 @@ int ins_ORR(arm_core p, uint32_t ins){
 int ins_MOV(arm_core p, uint32_t ins){
 	uint32_t shifter_operand = 0;
 	uint8_t shifter_carry_out = 0;
-	
-	get_shifter_operand_carry_out(p, ins, &shifter_operand, &shifter_carry_out);
+	get_operand_carryout(p, ins, &shifter_operand, &shifter_carry_out);
+
 	arm_write_register(p, get_rd(ins), shifter_operand);
 	if (bit_S(ins) == 1 && get_rd(ins) == 15){
 		if (arm_current_mode_has_spsr(p))
