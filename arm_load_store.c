@@ -44,7 +44,7 @@ uint32_t get_index(arm_core p, uint32_t ins)
 	uint32_t rm = arm_read_register(p, bit_3_0);
 	uint8_t shift_imm = get_bits(ins, 11, 7);
 	uint8_t shift_ind = get_bits(ins, 6, 5);
-	uint32_t index;
+	uint32_t index = 0;
 	switch (shift_ind){
 	case 0: /* LSL */
 		index = rm << shift_imm;
