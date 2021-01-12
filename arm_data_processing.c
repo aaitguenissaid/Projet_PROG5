@@ -535,7 +535,8 @@ int ins_SUB(arm_core p, uint32_t ins){
 	uint32_t shifter_operand = 0;
 	uint8_t shifter_carry_out = 0;
 
-	get_shifter_operand_carry_out(p, ins, &shifter_operand, &shifter_carry_out);
+//	get_shifter_operand_carry_out(p, ins, &shifter_operand, &shifter_carry_out);
+	get_operand_carryout(p, ins, &shifter_operand, &shifter_carry_out);
 	uint32_t valeur = (uint32_t)operation((uint64_t)arm_read_register(p, get_rn(ins)), (uint64_t)shifter_operand, 2);
 	arm_write_register(p, get_rd(ins), valeur);
 
