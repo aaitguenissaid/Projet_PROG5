@@ -613,7 +613,9 @@ int ins_SUB(arm_core p, uint32_t ins){
 */
 
 int ins_SUB(arm_core p, uint32_t ins){
-	uint32_t shifter_operand = get_bits(ins, 11, 0);
+	uint32_t shifter_operand = 0;
+	uint8_t shifter_carry_out = 0;
+	get_operand_carryout(p, ins, &shifter_operand, &shifter_carry_out);
 	uint32_t Rn_value = arm_read_register(p, (uint8_t)get_bits(ins, 19, 16));
 	uint32_t Rd_value = Rn_value - shifter_operand;
 	uint64_t res = (uint64_t)Rd_value - (uint64_t)shifter_operand;
@@ -633,7 +635,6 @@ int ins_SUB(arm_core p, uint32_t ins){
 		int V_Flag = overflow_from_sub(Rn_value, shifter_operand, res);	//unaffected
 		update_flags_cpsr(p, N_Flag, Z_Flag, C_Flag, V_Flag);
 	}
-
 	return 0;
 }
 
