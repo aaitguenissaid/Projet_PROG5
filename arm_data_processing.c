@@ -256,13 +256,23 @@ void get_operand_carryout(arm_core p, uint32_t ins, uint32_t *shifter_operand, u
 
 
 
-void update_flags_cpsr(arm_core p, int N_Flag, int Z_Flag, int C_Flag, int V_Flag){
-	uint32_t val_cpsr = arm_read_cpsr(p);
+void update_flags_cpsr(arm_core p, int n, int z, int c, int v){
+/*	uint32_t val_cpsr = arm_read_cpsr(p);
 	val_cpsr = N_Flag == 1 ? set_bit(val_cpsr, N) : clr_bit(val_cpsr, N);
 	val_cpsr = Z_Flag == 1 ? set_bit(val_cpsr, Z) : clr_bit(val_cpsr, Z);
 	val_cpsr = C_Flag == 1 ? set_bit(val_cpsr, C) : clr_bit(val_cpsr, C);
 	val_cpsr = V_Flag == 1 ? set_bit(val_cpsr, V) : clr_bit(val_cpsr, V);
-	arm_write_cpsr(p, val_cpsr);
+	arm_write_cpsr(p, val_cpsr);*/
+	uint32_t cpsr = arm_read_cpsr(p);
+	if (n != -1)
+         cpsr = (n == 1) ? set_bit(cpsr, N) : clr_bit(cpsr, N);
+    if (z != -1)
+        cpsr = (z == 1) ? set_bit(cpsr, Z) : clr_bit(cpsr, Z);
+    if (c != -1)
+        cpsr = (c == 1) ? set_bit(cpsr, C) : clr_bit(cpsr, C);
+    if (v != -1)
+        cpsr = (v == 1) ? set_bit(cpsr, V) : clr_bit(cpsr, V);
+    arm_write_cpsr(p, cpsr);
 }
 
 uint32_t two_complement(uint32_t operand){
@@ -291,6 +301,15 @@ int borrow_from(uint32_t operand1, uint32_t operand2){
 		return 1;
 	}
 }
+
+
+int overflow_from_sub(uint32_t op1, uint32_t op2, uint64_t res) {
+    return get_bit(op1, 31) != get_bit(op2, 31) &&
+		   get_bit(op1, 31) != get_bit(res, 31);
+}
+
+
+
 
 int overflow_from(uint32_t operand1, uint32_t operand2, int op){
 	uint64_t valeur = operation((uint64_t)operand1, (uint64_t)operand2, op);
@@ -564,7 +583,7 @@ int ins_EOR(arm_core p, uint32_t ins){
 
 	return 0;
 }
-
+/*
 int ins_SUB(arm_core p, uint32_t ins){
 	uint32_t shifter_operand = 0;
 	uint8_t shifter_carry_out = 0;
@@ -586,6 +605,32 @@ int ins_SUB(arm_core p, uint32_t ins){
 		int Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
 		int C_Flag = ~borrow_from(arm_read_register(p, get_rn(ins)), shifter_operand)&1;
 		int V_Flag = overflow_from(arm_read_register(p, get_rn(ins)), shifter_operand,2);
+		update_flags_cpsr(p, N_Flag, Z_Flag, C_Flag, V_Flag);
+	}
+
+	return 0;
+}
+*/
+
+int ins_SUB(arm_core p, uint32_t ins){
+	uint32_t shifter_operand = get_bits(ins, 11, 0);
+	uint32_t Rn_value = arm_read_register(p, (uint8_t)get_bits(ins, 19, 16));
+	uint32_t Rd_value = Rn_value - shifter_operand;
+	uint64_t res = (uint64_t)Rd_value - (uint64_t)shifter_operand;
+	arm_write_register(p, get_rd(ins), Rd_value);
+
+	if (bit_S(ins) == 1 && get_rd(ins) == 15){
+		if (arm_current_mode_has_spsr(p))
+			arm_write_cpsr(p, arm_read_spsr(p));
+		else{
+			return 0; // UNPREDICTABLE
+		}
+	}
+	else if (bit_S(ins) == 1){
+		int N_Flag = get_bit(Rd_value, 31);
+		int Z_Flag = (Rd_value == 0 ? 1 : 0);
+		int C_Flag = (Rn_value >= shifter_operand ? 1 : 0);
+		int V_Flag = overflow_from_sub(Rn_value, shifter_operand, res);	//unaffected
 		update_flags_cpsr(p, N_Flag, Z_Flag, C_Flag, V_Flag);
 	}
 
@@ -809,6 +854,7 @@ int ins_ORR(arm_core p, uint32_t ins){
 }
 
 int ins_MOV(arm_core p, uint32_t ins){
+	uint32_t Rd_value = arm_read_register(p, (uint8_t)get_bits(ins, 15, 12));
 	uint32_t shifter_operand = 0;
 	uint8_t shifter_carry_out = 0;
 	get_operand_carryout(p, ins, &shifter_operand, &shifter_carry_out);
@@ -822,8 +868,8 @@ int ins_MOV(arm_core p, uint32_t ins){
 		}
 	}
 	else if (bit_S(ins) == 1){
-		int N_Flag = get_bit(arm_read_register(p, get_rd(ins)),31);
-		int Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
+		int N_Flag = get_bit(Rd_value, 31);
+		int Z_Flag = (Rd_value == 0 ? 1 : 0);
 		int C_Flag = shifter_carry_out;
 		int V_Flag = get_bit(arm_read_cpsr(p), V);	//unaffected
 		update_flags_cpsr(p, N_Flag, Z_Flag, C_Flag, V_Flag);
