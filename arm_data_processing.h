@@ -51,33 +51,6 @@ Il y a 11 addressings modes:
 uint8_t get_opcode(uint32_t ins);
 
 /*
-   bit_I
-   description : Obtenir le I bit dans une instruction.
-   parametres : uint32_t ins
-   valeur de retour : le bit ins[25]
-   effets de bord : 
-*/
-uint8_t bit_I(uint32_t ins);
-
-/*
-   bit_4
-   description : Obtenir le bit de l'indice 4 dans une instruction.
-   parametres : uint32_t ins
-   valeur de retour : le bit ins[4]
-   effets de bord : 
-*/
-uint8_t bit_4(uint32_t ins);
-
-/*
-   bit_7
-   description : Obtenir le bit de l'indice 7 dans une instruction.
-   parametres : uint32_t ins
-   valeur de retour : le bit ins[7]
-   effets de bord : 
-*/
-uint8_t bit_7(uint32_t ins);
-
-/*
    bit_S
    description : Obtenir le S bit dans une instruction.
    parametres : uint32_t ins
@@ -96,51 +69,6 @@ uint8_t bit_S(uint32_t ins);
 uint32_t get_C_flag(arm_core p);
 
 /*
-   get_shift_imm
-   description : Obtenir la partie shift_imm d'une instruction.
-   parametres : uint32_t ins
-   valeur de retour : ins[11:7]
-   effets de bord : 
-*/
-uint8_t get_shift_imm(uint32_t ins);
-
-/*
-   get_shift
-   description : Obtenir la partie shift d'une instruction.
-   parametres : uint32_t ins
-   valeur de retour : ins[6:5]
-   effets de bord : 
-*/
-uint8_t get_shift(uint32_t ins);
-
-/*
-   get_rm
-   description : Obtenir la valeur Rm d'une instruction.
-   parametres : uint32_t ins
-   valeur de retour : ins[3:0]
-   effets de bord : 
-*/
-uint8_t get_rm(uint32_t ins);
-
-/*
-   get_rm_31
-   description : Obtenir le 31 bit de la valeur de Rm.
-   parametres : arm_core p, uint32_t ins
-   valeur de retour : Rm[31]
-   effets de bord : 
-*/
-uint8_t get_rm_31(arm_core p, uint32_t ins);
-
-/*
-   get_rs
-   description : Obtenir la partie Rs d'une instruction.
-   parametres : uint32_t ins
-   valeur de retour : ins[11:8]
-   effets de bord : 
-*/
-uint8_t get_rs(uint32_t ins);
-
-/*
    get_rd
    description : Obtenir la partie Rd d'une instruction.
    parametres : uint32_t ins
@@ -157,15 +85,6 @@ uint8_t get_rd(uint32_t ins);
    effets de bord : 
 */
 uint8_t get_rn(uint32_t ins);
-
-/*
-   get_data_rs_7_0
-   description : Obtenir la partie de 0 à 7 bits de la valeur de Rs.
-   parametres : arm_core p, uint32_t ins
-   valeur de retour : Rs[7:0]
-   effets de bord : 
-*/
-uint8_t get_data_rs_7_0(arm_core p, uint32_t ins);
 
 /*
    two_complement
@@ -226,103 +145,13 @@ int overflow_from(uint32_t operand1, uint32_t operand2, int op);
 int borrow_from(uint32_t operand1, uint32_t operand2);
 
 /*
-   imm_32_bit
-   description : Data-processing operands - Immediate. (page A5-6)
-   parametres : arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out
-   valeur de retour : 
-   effets de bord : modifier les valeurs shifter_operand et shifter_carry_out
-*/
-void imm_32_bit(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
-
-/*
-   reg_shift
-   description : Data-processing operands - Register. (page A5-6)
-   parametres : arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out
-   valeur de retour : 
-   effets de bord : modifier les valeurs shifter_operand et shifter_carry_out
-*/
-void reg_shift(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
-
-/*
-   lsl_imm
-   description : Data-processing operands - Logical shift left by immediate. (page A5-6)
-   parametres : arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out
-   valeur de retour : 
-   effets de bord : modifier les valeurs shifter_operand et shifter_carry_out
-*/
-void lsl_imm(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
-
-/*
-   lsl_reg
-   description : Data-processing operands - Logical shift left by register. (page A5-6)
-   parametres : arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out
-   valeur de retour : 
-   effets de bord : modifier les valeurs shifter_operand et shifter_carry_out
-*/
-void lsl_reg(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
-
-/*
-   lsr_imm
-   description : Data-processing operands - Immediate. (page A5-6)
-   parametres : arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out
-   valeur de retour : 
-   effets de bord : modifier les valeurs shifter_operand et shifter_carry_out
-*/
-void lsr_imm(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
-
-/*
-   lsr_reg
-   description : Data-processing operands - Immediate. (page A5-6)
-   parametres : arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out
-   valeur de retour : 
-   effets de bord : modifier les valeurs shifter_operand et shifter_carry_out
-*/
-void lsr_reg(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
-
-/*
-   asr_imm
-   description : Data-processing operands - Immediate. (page A5-6)
-   parametres : arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out
-   valeur de retour : 
-   effets de bord : modifier les valeurs shifter_operand et shifter_carry_out
-*/
-void asr_imm(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
-
-/*
-   asr_reg
-   description : Data-processing operands - Immediate. (page A5-6)
-   parametres : arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out
-   valeur de retour : 
-   effets de bord : modifier les valeurs shifter_operand et shifter_carry_out
-*/
-void asr_reg(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
-
-/*
-   ror_imm
-   description : Data-processing operands - Immediate. (page A5-6)
-   parametres : arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out
-   valeur de retour : 
-   effets de bord : modifier les valeurs shifter_operand et shifter_carry_out
-*/
-void ror_imm(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
-
-/*
-   ror_reg
-   description : Data-processing operands - Rotate right by register. (page A5-6)
-   parametres : arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out
-   valeur de retour : 
-   effets de bord : modifier les valeurs shifter_operand et shifter_carry_out
-*/
-void ror_reg(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
-
-/*
-   get_shifter_operand_carry_out
+   get_operand_carryout
    description : Obtenir shifter_operand et shifter_carry_out selon la addressing mode  
    parametres : arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out
    valeur de retour : 
    effets de bord : modifier les valeurs shifter_operand et shifter_carry_out
 */
-void get_shifter_operand_carry_out(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
+void get_operand_carryout(arm_core p, uint32_t ins, uint32_t *shifter_operand, uint8_t *shifter_carry_out);
 
 /*
    update_flags_cpsr
@@ -331,7 +160,7 @@ void get_shifter_operand_carry_out(arm_core p, uint32_t ins, uint32_t *shifter_o
    valeur de retour : 
    effets de bord : modifier les valeurs shifter_operand et shifter_carry_out
 */
-void update_flags_cpsr(arm_core p, int N_Flag, int Z_Flag, int C_Flag, int V_Flag);
+void update_flags_cpsr(arm_core p, int n, int z, int c, int v);
 
 /*
    description : Les instructions de data-processing
