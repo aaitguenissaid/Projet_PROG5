@@ -120,13 +120,14 @@ void get_operand_carryout(arm_core p, uint32_t ins, uint32_t *shifter_operand, u
 	uint32_t Rm_value = arm_read_register(p, (uint8_t)get_bits(ins, 3, 0));
 	uint32_t Rs_value = arm_read_register(p, (uint8_t)get_bits(ins, 11, 8));
 	uint8_t shift_imm = get_bits(ins, 11, 7);
+	uint8_t C_flag = get_bit(arm_read_cpsr(p), C);
 	if(get_bits(ins, 27, 25) == 1){
 		// 1.Data-processing operands - Immediate
 		uint32_t immed_8 = get_bits(ins, 7, 0);
 		uint8_t rotate_imm = get_bits(ins, 11, 8);
 		*shifter_operand = ror(immed_8, rotate_imm*2);
 		if(rotate_imm == 0){
-			*shifter_carry_out = get_C_flag(p);
+			*shifter_carry_out = C_flag;
 		}else{
 			*shifter_carry_out = get_bit(*shifter_operand, 31);
 		} 
@@ -134,35 +135,62 @@ void get_operand_carryout(arm_core p, uint32_t ins, uint32_t *shifter_operand, u
 	else if((get_bits(ins, 27, 25) == 0) && ((get_bits(ins, 11, 4) == 0))){
 		// 2.Data-processing operands - Register
 		*shifter_operand = Rm_value;
-		*shifter_carry_out = get_C_flag(p);
+		*shifter_carry_out = C_flag;
 	}
 	else if((get_bits(ins, 27, 25) == 0) && ((get_bits(ins, 6, 4) == 0))){
 		// 3.Data-processing operands - Logical shift left by immediate
 		if( shift_imm == 0){
 			*shifter_operand = Rm_value;
-			*shifter_carry_out = get_C_flag(p);
+			*shifter_carry_out = C_flag;
 		}else{
 			*shifter_operand = Rm_value << shift_imm;
 			*shifter_carry_out = get_bit(Rm_value, 32-shift_imm);
 		}
 	}
-	else if((get_bits(ins, 27, 25) == 0) && ((get_bits(ins, 6, 4) == 0))){
+	else if((get_bits(ins, 27, 25) == 0) && ((get_bits(ins, 7, 4) == 1))){
 		// 4.Data-processing operands - Logical shift left by register
 		if (get_bits(Rs_value, 7, 0) == 0){
 			*shifter_operand = Rm_value;
-			*shifter_carry_out = get_C_flag(p);
+			*shifter_carry_out = C_flag;
+		}else if(get_bits(Rs_value, 7, 0) < 32){
+			*shifter_operand = Rm_value << get_bits(Rs_value, 7, 0);
+			*shifter_carry_out = get_bit(Rm_value, 32 - get_bits(Rs_value, 7, 0));
+		}else if(get_bits(Rs_value, 7, 0) == 32){
+			*shifter_operand = 0;
+			*shifter_carry_out = get_bit(Rm_value, 0);
+		}else{
+			*shifter_operand = 0;
+			*shifter_carry_out = 0;
+		}		
+	}
+	else if((get_bits(ins, 27, 25) == 0) && ((get_bits(ins, 6, 4) == 2))){
+		// 5.Data-processing operands - Logical shift right by immediate
+		if( shift_imm == 0){
+			*shifter_operand = 0;
+			*shifter_carry_out = get_bit(Rm_value, 31);
+		}else{
+			*shifter_operand = Rm_value >> shift_imm;
+			*shifter_carry_out = get_bit(Rm_value, shift_imm-1);
+		}	
+	}
+	else if((get_bits(ins, 27, 25) == 0) && ((get_bits(ins, 7, 4) == 3))){
+		// 6.Data-processing operands - Logical shift right by register
+		if (get_bits(Rs_value, 7, 0) == 0){
+			*shifter_operand = Rm_value;
+			*shifter_carry_out = C_flag;
 		}else if(get_bits(Rs_value, 7, 0) < 32){
 			*shifter_operand = Rm_value >> get_bits(Rs_value, 7, 0);
-			*shifter_carry_out = get_bit(Rm_value, get_bits(Rs_value, 7, 0) - 1);
+			*shifter_carry_out = get_bit(Rm_value, get_bits(Rs_value, 7, 0)-1);
 		}else if(get_bits(Rs_value, 7, 0) == 32){
 			*shifter_operand = 0;
 			*shifter_carry_out = get_bit(Rm_value, 31);
 		}else{
 			*shifter_operand = 0;
-			*shifter_carry_out = get_bit(Rm_value, 31);
+			*shifter_carry_out = 0;
 		}		
 	}
 	else if	((get_bits(ins, 27, 25) == 0) && ((get_bits(ins, 6, 4) == 4))){
+		// 7.Data-processing operands - Arithmetic shift right by immediate
 		if(shift_imm == 0){
 			if(get_bit(Rm_value, 31) == 0){
 				*shifter_operand = 0;
@@ -176,45 +204,51 @@ void get_operand_carryout(arm_core p, uint32_t ins, uint32_t *shifter_operand, u
 			*shifter_carry_out = get_bit(Rm_value, shift_imm-1);
 		}		
 	}
-	else if	((get_bits(ins, 27, 25) == 0) && ((get_bits(ins, 7, 4) == 5))){ 
+	else if	((get_bits(ins, 27, 25) == 0) && ((get_bits(ins, 7, 4) == 5))){
+		// 8.Data-processing operands - Arithmetic shift right by register 
 		if (get_bits(Rs_value, 7, 0) == 0){
 			*shifter_operand = Rm_value;
-			*shifter_carry_out = get_C_flag(p);
+			*shifter_carry_out = C_flag;
 		}else if(get_bits(Rs_value, 7, 0) < 32){
 			*shifter_operand = asr(Rm_value, (uint8_t) get_bits(Rs_value, 7, 0));
-			*shifter_carry_out = get_bit(Rm_value, get_bits(Rs_value, 7, 0) - 1);
-		}else if(get_bits(Rs_value, 7, 0) == 32){
-			*shifter_operand = 0;
-			*shifter_carry_out = get_bit(Rm_value, 31);
-		}else{
-			*shifter_operand = 0xFFFFFFFF;
-			*shifter_carry_out = get_bit(Rm_value, 31);
+			*shifter_carry_out = (uint8_t)get_bit(Rm_value, get_bits(Rs_value, 7, 0) - 1);
+		}else {
+			if(get_bit(Rm_value,31)){
+				*shifter_operand = 0xFFFFFFFF;
+				*shifter_carry_out = get_bit(Rm_value, 31);
+			}else{
+				*shifter_operand = 0;
+				*shifter_carry_out = get_bit(Rm_value, 31);
+			}
 		}
 	}		
 	else if	((get_bits(ins, 27, 25) == 0) && ((get_bits(ins, 6, 4) == 6))){
+		// 9.Data-processing operands - Rotate right by immediate
 		if (shift_imm == 0){
-//See “Data-processing operands - Rotate right with extend” on page A5-17
+			*shifter_operand = (C_flag << 31) | (Rm_value >> 1);
+			*shifter_carry_out = get_bit(Rm_value, 0);
 		}           
 		else{
 			*shifter_operand = ror(Rm_value, shift_imm);
 			*shifter_carry_out = get_bit(Rm_value, shift_imm-1);
 		}
 	}
-	else if ((get_bits(ins, 27, 25) == 0) && ((get_bits(ins, 7, 4) == 7)))
-	{
+	else if ((get_bits(ins, 27, 25) == 0) && ((get_bits(ins, 7, 4) == 7))){
+		// 10.Data-processing operands - Rotate right by register
 		if (get_bits(Rs_value, 7, 0) == 0){
 			*shifter_operand = Rm_value;
-			*shifter_carry_out = get_C_flag(p);
+			*shifter_carry_out = C_flag;
 		}else if(get_bits(Rs_value, 4, 0) == 0){
-			*shifter_operand = 0;
+			*shifter_operand = Rm_value;
 			*shifter_carry_out = get_bit(Rm_value, 31);;
-		}else if(get_bits(Rs_value, 7, 0) == 32){
+		}else if(get_bits(Rs_value, 4, 0) > 0){
 			*shifter_operand = ror(Rm_value, (uint8_t) get_bits(Rs_value, 4, 0));
 			*shifter_carry_out = get_bit(Rm_value, get_bits(Rs_value, 4, 0) - 1);
 		}
 	}
 	else if ((get_bits(ins, 27, 25) == 0) && ((get_bits(ins, 11, 4) == 6))){
-		*shifter_operand = ((uint32_t)get_C_flag(p) << 31) | (Rm_value >> 1);
+		// 11.Data-processing operands - Rotate right with extend
+		*shifter_operand = (C_flag << 31) | (Rm_value >> 1);
 		*shifter_carry_out = get_bit(Rm_value, 0);
 	}
 }
