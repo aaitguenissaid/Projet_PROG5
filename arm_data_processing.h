@@ -186,13 +186,13 @@ int ins_BIC(arm_core p, uint32_t ins);
 int ins_MVN(arm_core p, uint32_t ins);
 
 /*
-   arm_data_processing_shift
+   arm_data_processing
    description : décodage spécialisé pour les instructions  de traitement de données AND, EOR, SUB, RSB, ADD, ADC, SBC, RSC, TST, TEQ, CMP, CMN, ORR, MOV, BIC, MVN
    parametres : arm_core p, uint32_t ins
    valeur de retour : 1 si succès, 0 sinon
    effets de bord : modifier la valeur du registre de distination, modifier les flags dans le CPSR.
 */
-int arm_data_processing_shift(arm_core p, uint32_t ins);
+int arm_data_processing(arm_core p, uint32_t ins);
 
 /*
    arm_data_processing_immediate_msr

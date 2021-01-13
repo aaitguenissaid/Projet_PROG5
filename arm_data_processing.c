@@ -654,7 +654,7 @@ int ins_MVN(arm_core p, uint32_t ins){
 }
 
 /* Decoding functions for different classes of instructions */
-int arm_data_processing_shift(arm_core p, uint32_t ins) {
+int arm_data_processing(arm_core p, uint32_t ins) {
 	uint8_t opcode = get_opcode(ins);
 	switch (opcode){
 	case 0 : return ins_AND(p, ins); break;
