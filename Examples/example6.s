@@ -1,0 +1,20 @@
+.global main
+.text
+main:
+	MOVEQ R0 , #0x01
+	MOVNE R0 , #0x01
+	MOVCS R0 , #0x01
+	MOVCC R0 , #0x01
+	MOVMI R0 , #0x01
+	MOVPL R0 , #0x01
+	MOVVS R0 , #0x01
+	MOVVC R0 , #0x01
+	MOVHI R0 , #0x01
+	MOVLS R0 , #0x01
+	MOVGE R0 , #0x01
+	MOVLT R0 , #0x01
+	MOVGT R0 , #0x01
+	MOVLE R0 , #0x01
+	MOVAL R0 , #0x01
+	MOV R0 , #0x01
+    swi 0x123456
