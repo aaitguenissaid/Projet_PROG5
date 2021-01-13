@@ -4,13 +4,13 @@ main:
     ldr r0, =var1  
     ldr r1, =var2
     ldrb r2,[r0]    
-    strb r2, [r1]
-    ldr r3 , =var2 
+    strb r2, [r1] @var2 = 0x11
+    ldr r3 , =var2
     ldrh r2,[r0]    
-    strh r2, [r1]
-    ldr r3 , =var2  
+    strh r2, [r1] @var2 = 0x1111
+    ldr r3 , =var2
     ldr r2, [r0]    
-    str r2, [r1]
+    str r2, [r1] @var2 = 0x11111111
     ldr r3 , =var2
     swi 0x123456
 .data
