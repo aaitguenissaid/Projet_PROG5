@@ -21,6 +21,7 @@ config.h.in~
 
 #program examples
 Examples/example?
+Examples/example??
 
 #autoreconf
 autom4te.cache/
