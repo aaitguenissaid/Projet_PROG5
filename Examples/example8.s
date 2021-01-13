@@ -6,8 +6,8 @@ main:
     ldrb r2,[r0]    
     strb r2, [r1]
     ldr r3 , =var2 
-    ldrh r2,[r0]    
-    strh r2, [r1]
+    @ldrh r2,[r0]    
+    @strh r2, [r1]
     ldr r3 , =var2  
     ldr r2, [r0]    
     str r2, [r1]

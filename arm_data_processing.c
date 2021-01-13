@@ -442,7 +442,6 @@ int ins_ADC(arm_core p, uint32_t ins){
 }
 
 int ins_SBC(arm_core p, uint32_t ins){
-	return 0;
 	uint32_t shifter_operand = 0;
 	uint8_t shifter_carry_out = 0;
 
