@@ -415,7 +415,7 @@ int arm_load_store(arm_core p, uint32_t ins)
 				}
 			}else{
 				if (arm_read_half(p, address, &half) != 0)
-					return -1;
+					return -1; 
 			}
 			arm_write_register(p, Rd, (uint32_t)half);
 			return 0;
@@ -441,7 +441,7 @@ int arm_load_store(arm_core p, uint32_t ins)
 			return UNDEFINED_INSTRUCTION;
 	}
 
-	return DATA_ABORT;
+	return UNDEFINED_INSTRUCTION;
 }
 
 int arm_load_store_multiple(arm_core p, uint32_t ins)

@@ -87,98 +87,75 @@ int condition_passed(arm_core p, uint32_t ins) {
 }
 
 static int arm_execute_instruction(arm_core p) {
+    uint32_t ins;
+    int exception = arm_fetch(p, &ins);
+    if(exception != 0)
+      return 1;
 
-    //fetch
-    // ri Registre d'instruction (Variable local)
-    uint32_t ri;
-    int exception = arm_fetch(p, &ri);
-    if(exception != 0){
-      return PREFETCH_ABORT;
-    }
-    //decode 27 - 25
-     uint8_t opcode = (uint8_t) get_bits(ri, 27, 25);
+    if(!condition_passed(p, ins))
+      return 1;
 
-    if(condition_passed(p, ri)){
-      switch(opcode){
-        case 0x00:
-          if(get_bit(ri, 4)==0) {  // bit_4 = 0
-              if(get_bits(ri, 24, 23)==2 && get_bit(ri, 20)==0){ //  Miscellaneous instructions
-                return arm_miscellaneous(p, ri);
-              } else { //  Data processing immediate shift
-                return arm_data_processing_shift(p, ri);
-              }
-          } else { // bit_4 = 1
-              if(get_bit(ri, 7)==0){
-                  if(get_bits(ri, 24, 23)==2 && get_bit(ri, 20)==1){  //  Miscellaneous instructions
-                    return arm_miscellaneous(p, ri);
-                  } else { // Data processing register shift [2]
-                    return arm_data_processing_shift(p, ri);
-                  }
-              } else { // bit_7 = 1 Multiplies: See Figure A3-3
-                      //Extra load/stores: See Figure A3-5
-                      return arm_coprocessor_load_store(p, ri);
-              }
+    uint8_t opcode = get_bits(ins, 27, 25);
+    switch(opcode){
+      case 0x0:
+        if(get_bit(ins, 4)==0) {  
+            if(get_bits(ins, 24, 23) == 2 && get_bit(ins, 20) == 0) 
+              return arm_miscellaneous(p, ins);
+            else 
+              return arm_data_processing(p, ins);
+        } else { 
+            if(get_bit(ins, 7)==0){
+                if(get_bits(ins, 24, 23)==2 && get_bit(ins, 20)==1) 
+                  return arm_miscellaneous(p, ins);
+                else 
+                  return arm_data_processing(p, ins);
+            } else {                     
+                  return arm_load_store(p, ins);                                
+            }        
+        }
+        break;
+      case 0x1:
+        return arm_data_processing(p, ins);
+
+      case 0x2:
+        return arm_load_store(p, ins);
+
+      case 0x3:
+        if(get_bit(ins, 4)==0) {  
+          return arm_load_store(p, ins);
+        } else {
+          if(get_bits(ins, 24, 20)==0x1F && get_bits(ins, 7, 5)==0x07){ 
+            return UNDEFINED_INSTRUCTION;
+          } else { 
+
+            return UNDEFINED_INSTRUCTION;
           }
-          break;
-        case 0x01:
-          if(get_bits(ri, 24, 23)==2) {
-            if(get_bits(ri, 22, 21)==2) { // Move immediate to status register page 145
-  // TODO
-              return UNDEFINED_INSTRUCTION;
-            } else { // Undefined instruction
-              return UNDEFINED_INSTRUCTION;
-            }
-          } else { // Data processing immediate [2]
-            return arm_data_processing_shift(p, ri);
+        }
+
+      case 0x4:
+        return arm_load_store_multiple(p, ins);
+
+      case 0x5:
+        return arm_branch(p, ins);
+
+      case 0x6:
+        return arm_coprocessor_load_store(p, ins);
+
+      case 0x7:
+        if(get_bit(ins,24)==0){
+          if(get_bit(ins,4)==0){ 
+            return arm_data_processing(p, ins);
+          } else { 
+            return UNDEFINED_INSTRUCTION;
           }
-          break;
-        // Load/store immediate offset
-        case 0x02:
-          return arm_load_store(p, ri);
-        break;
-        case 0x03:
-          if(get_bit(ri, 4)==0) {  //  Load/store register offset
-            return arm_load_store(p, ri);
-          } else {
-            if(get_bits(ri, 24, 20)==0x1F && get_bits(ri, 7, 5)==0x07){ // Architecturally undefined
-              return UNDEFINED_INSTRUCTION;
-            } else { // Media instructions [4]: See Figure A3-2 page 142
-// TODO
-              return UNDEFINED_INSTRUCTION;
-            }
-          }
-          break;
-        //Load/store multiple
-        case 0x04:
-          return arm_load_store_multiple(p, ri);
-        break;
-        //Branch and branch with link
-        case 0x05:
-          return arm_branch(p, ri);
-        break;
-        //Coprocessor load/store and double register transfers
-        case 0x06:
-          return arm_coprocessor_load_store(p, ri);
-        break;
-        case 0x07:
-          if(get_bit(ri,24)==0){
-            if(get_bit(ri,4)==0){ // Coprocessor data processing
-              return arm_data_processing_shift(p, ri);
-            } else { // Coprocessor register transfers
-              return UNDEFINED_INSTRUCTION;
-            }
-          } else { // Software interrupt
-            return arm_coprocessor_others_swi(p, ri);
-          }
-        break;
-        default:
+        } else {
+          return arm_coprocessor_others_swi(p, ins);
+        }
+
+      default:
         return UNDEFINED_INSTRUCTION;
-        break;
-      }
-  }
-return 0;
+    }
 }
-
 
 int arm_step(arm_core p) {
     int result;
