@@ -22,7 +22,7 @@ main:
 	@orr r4, r0, r2 		@ write 0x0000FFFF to r4
 	@bic r4, r0, r1		@ write 0x0000FFFF to r4
 	@bic r4, r0, r0		@ write 0 to r4
-	
+	mov r2, #0
 	mvn r5, r2 			@ write 0xFFFFFFFF to r5
 	mov r2, #0x00000001
 	
@@ -30,8 +30,8 @@ main:
 	cmp r5, r2 			@ z = 0
 	cmp r2, r2 			@ z = 1
 	
-	@tst r2, #1			@ z = 1
-	@tst r2, r2 			@ z = 1
+	tst r2, #1			@ z = 1
+	tst r2, r2 			@ z = 1
 	
 	sub r3, r2, r2
 	TEQ r2, r2 			@ z = 0

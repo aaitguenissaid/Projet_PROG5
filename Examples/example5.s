@@ -3,8 +3,8 @@
 main:
     @Test unitaire 
     @MOV
-    MOV R0, #1 @ avec valeur, écrit 0x00000001 dans R0
-    MOV R1 , R0 @ avec register , écrit contenu de R0(0x00000001) dans R1
+    MOV R0, #1 @MOV avec valeur, écrit 0x00000001 dans R0
+    MOV R1 , R0 @MOV avec register , écrit contenu de R0(0x00000001) dans R1
     MOVS R1 , R0 @MOV avec flag S. Change CPSR si nécessaire
     @ADD
     ADD R1, R0 , #0x01 @ADD avec duex registers et valeur, écrit 0x00000002 (R0+0x01) dans R1
@@ -62,6 +62,48 @@ main:
  	  @BIC
     BIC R2 , R2 ,#1 @BIC avec duex registers et valeur, écrit  0x00000002 dans R2
     BIC R2 , R1 ,R0 @BIC avec trois register, écrit  0x00000004 dans R2
-    
+    @MVN
+    MOV R1, #0 @supp
+    MVN R2, R1 @ MVN avec duex register , écrit 0xFFFFFFFF (~R1) dans R2
+    MVN R2, #0x00 @ MVN avec register et valeur, écrit 0xFFFFFFFF (~(0x00)) dans R2
+    @TST
+    MOV R1, #1 @supp
+    TST R1 ,#1 @ R1&0x01
+    TST R1 ,R1 @ R1&R1
+    @CMN
+    MOV R0,#1 @supp
+    MOV R1,#0 @supp
+    CMN R0, R1
+    @CMP
+    CMP R0, R1
+    @TEQ
+    TEQ R0 ,R1
+    LDR R0 , =word32 @LDR pseudo-instruction R0 = &word32
+    LDR R1 , [R0] @ R1 = *R0 (Mem read 4 bytes)
+    STR R1 , [R0] @ *R0=R1 (Mem write 4 bytes)
+    LDR R1 , [R0,#2] @ R1 = *(R0+2) (Mem read 4 bytes)
+    STR R1 , [R0,#2] @*(R0+2)=R1 (Mem write 4 bytes)
+    LDRB R1 , [R0] @  R1 = *R0 (Mem read 1 bytes)
+    STRB R1 , [R0] @  *R0=R1 (Mem write 1 bytes)
+    LDRB R1 , [R0,#2] @ R1 = *(R0+2) (Mem read 1 bytes)
+    STRB R1 , [R0,#2] @ *(R0+2)=R1 (Mem write 1 bytes)
+    LDRH R1 , [R0] @  R1 = *R0 (Mem read 2 bytes)
+    STRH R1 , [R0] @  *R0=R1 (Mem write 2 bytes)
+    LDRH R1 , [R0,#2] @ R1 = *(R0+2) (Mem read 2 bytes)
+    STRH R1 , [R0,#2] @ *(R0+2)=R1 (Mem write 2 bytes)
+    LDR R0, =src  
+    LDR R1, =dest
+    LDM R0!, {R2-R4} @R2 = *(R0+0) (Mem read 4 bytes) R3 = *(R0+4) (Mem read 4 bytes) R4 = *(R0+8) (Mem read 4 bytes)
+    STM R1!, {R2-R4} @*(R0+0)=R2 (Mem write 4 bytes) *(R0+4)=R3 (Mem write 4 bytes) *(R0+8)=R4 (Mem write 4 bytes) 
     swi 0x123456
-
+word32:
+    .word 0x11223344
+    .word 0x55667788
+src: 
+  .word 0x11111111
+  .word 0x22222222
+  .word 0x33333333  
+dest: 
+  .word 0x00000000
+  .word 0x00000000
+  .word 0x00000000

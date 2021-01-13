@@ -1,17 +1,17 @@
 .global main
 .text
 main:
-    ldr r0, =word32
-    ldr r1, [r0]
-    ldrb r1, [r0]
-    ldrh r1, [r0]
-    add r0, r0, #1
-    ldrb r1, [r0]
-    add r0, r0, #1
-    ldrb r1, [r0]
-    ldrh r1, [r0]
-    add r0, r0, #1
-    ldrb r1, [r0]
+    LDR r0, =word32 
+    LDR r1, [r0] 
+    LDRB r1, [r0] 
+    LDRH r1, [r0] 
+    ADD r0, r0, #1
+    LDRB r1, [r0]
+    ADD r0, r0, #1
+    LDRB r1, [r0]
+    LDRH r1, [r0]
+    ADD r0, r0, #1
+    LDRB r1, [r0]
     swi 0x123456
 .data
 word32:
