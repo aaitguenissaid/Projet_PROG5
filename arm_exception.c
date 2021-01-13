@@ -97,14 +97,14 @@ void arm_exception(arm_core p, unsigned char exception) {
 			}
 			break;
 		default:
-			exit(0);
+			break;
 	}
 }
 
 static void change_mode(arm_core p, uint8_t mode) {
-	uint32_t val = arm_read_cpsr(p) & 0xE0;
-	val |= mode;
-	arm_write_cpsr(p,val);
+	uint32_t val = arm_read_cpsr(p) & 0xFFFFFFE0; //Retire le mode
+	val |= mode; //Ajoute le nouveau mode
+	arm_write_cpsr(p,val); //Ecrit dans le registre CPSR
 }
 
 static void save_cpsr(arm_core p, uint32_t cpsr) {
