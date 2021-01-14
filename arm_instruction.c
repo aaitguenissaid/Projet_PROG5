@@ -128,7 +128,7 @@ static int arm_execute_instruction(arm_core p) {
       break;
 
    case 0x1:
-      if ((get_bits(ins, 24, 23) == 2) && (get_bits(ins, 21, 20)))
+      if ((get_bits(ins, 24, 23) == 2) && (get_bits(ins, 21, 20) == 2))
          return arm_data_processing_immediate_msr(p, ins);
       else {
          return arm_data_processing(p, ins);
