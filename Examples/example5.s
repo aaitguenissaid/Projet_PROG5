@@ -67,17 +67,21 @@ main:
     MVN R2, R1 @ MVN avec duex register , écrit 0xFFFFFFFF (~R1) dans R2
     MVN R2, #0x00 @ MVN avec register et valeur, écrit 0xFFFFFFFF (~(0x00)) dans R2
     @TST
-    MOV R1, #1 @supp
-    TST R1 ,#1 @ R1&0x01
-    TST R1 ,R1 @ R1&R1
+    MOV R2, #0          @supp
+    MVN R5 , R2          @supp write 0xFFFFFFFF to r5
+    MOV R2, #0x00000001 @supp
+    TST R2, #1      @ z = 1
+    TST R2, R2      @ z = 1
     @CMN
-    MOV R0,#1 @supp
-    MOV R1,#0 @supp
-    CMN R0, R1
+    CMN R5, R2      @ z = 1
     @CMP
-    CMP R0, R1
+    CMP R5, R2      @ z = 0
+    CMP R2, R2      @ z = 1
     @TEQ
-    TEQ R0 ,R1
+    SUB R3, R2, R2  @supp
+    TEQ R2, R2      @ z = 0
+    TEQ R2, R3      @ z = 1
+    @Load Store
     LDR R0 , =word32 @LDR pseudo-instruction R0 = &word32
     LDR R1 , [R0] @ R1 = *R0 (Mem read 4 bytes)
     STR R1 , [R0] @ *R0=R1 (Mem write 4 bytes)

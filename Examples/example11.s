@@ -13,15 +13,17 @@ main:
 	sbc r3, r1 ,r0		@ write 0x0F to r3
 	rsc r3, r1, r0		@ write 0x0F to r3
 	
-	@mov r0, #0x0000FFFF
-	@mov r1, #0xFFFF0000
-	@mov r2, #0			
-	@and r4, r0, r1		@ write 0 to r4
-	@and r4, r0, r2 		@ write 0 to r4
-	@orr r4, r0, r1 		@ write 0xFFFFFFFF to r4
-	@orr r4, r0, r2 		@ write 0x0000FFFF to r4
-	@bic r4, r0, r1		@ write 0x0000FFFF to r4
-	@bic r4, r0, r0		@ write 0 to r4
+	LDR	r0, =var1
+	LDR	r1, =var2
+	LDR r0,[r0]
+	LDR r1,[r1]
+	mov r2, #0			
+	and r4, r0, r1		@ write 0 to r4
+	and r4, r0, r2 		@ write 0 to r4
+	orr r4, r0, r1 		@ write 0xFFFFFFFF to r4
+	orr r4, r0, r2 		@ write 0x0000FFFF to r4
+	bic r4, r0, r1		@ write 0x0000FFFF to r4
+	bic r4, r0, r0		@ write 0 to r4
 	mov r2, #0
 	mvn r5, r2 			@ write 0xFFFFFFFF to r5
 	mov r2, #0x00000001
@@ -37,4 +39,8 @@ main:
 	TEQ r2, r2 			@ z = 0
  	TEQ r2, r3 			@ z = 1
  	swi 0x123456
-
+.data
+var1: 
+	.word 0x0000FFFF  
+var2: 
+	.word 0xFFFF0000
