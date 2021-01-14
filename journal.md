@@ -30,3 +30,7 @@
 11/01/2021 : Appel de groupe et tentatives d'exécution des programmes d'exemple, correction de bugs
 
 12/01/2021 : Correction des bugs restants, répartition des dernières tâches, début du travail sur les exceptions
+
+13/01/2021 : Début de l'écriture du rapport, écriture et exécution de jeux de test, correction de quelques bugs
+
+14/01/2021 : Fin du rapport, finitions, rendu
