@@ -44,124 +44,123 @@ DONE  Ensuite, cette fonction devra sélectionner la classe d’instructions
 */
 
 int condition_passed(arm_core p, uint32_t ins) {
-    uint8_t cond = get_bits(ins, 31, 28);
-    uint32_t cpsr = arm_read_cpsr(p);
-    int n = get_bit(cpsr, 31);
-    int z = get_bit(cpsr, 30);
-    int c = get_bit(cpsr, 29);
-    int v = get_bit(cpsr, 28);
-    switch(cond){
-        case 0x0:
-            return z == 1;
-        case 0x1:
-            return z == 0;
-        case 0x2:
-            return c == 1;
-        case 0x3:
-            return c == 0;
-        case 0x4:
-            return n == 1;
-        case 0x5:
-            return n == 0;
-        case 0x6:
-            return v == 1;
-        case 0x7:
-            return v == 0;
-        case 0x8:
-            return c == 1 && z == 0;
-        case 0x9:
-            return c == 0 || z == 1;
-        case 0xA:
-            return n == v;
-        case 0xB:
-            return n != v;
-        case 0xC:
-            return z == 0 && n == v;
-        case 0xD:
-            return z == 1 || n != v;
-        case 0xF:
-            return 0xF;
-        default: 
-            return 1;
-  }
+   uint8_t cond = get_bits(ins, 31, 28);
+   uint32_t cpsr = arm_read_cpsr(p);
+   int n = get_bit(cpsr, 31);
+   int z = get_bit(cpsr, 30);
+   int c = get_bit(cpsr, 29);
+   int v = get_bit(cpsr, 28);
+   switch (cond) {
+   case 0x0:
+      return z == 1;
+   case 0x1:
+      return z == 0;
+   case 0x2:
+      return c == 1;
+   case 0x3:
+      return c == 0;
+   case 0x4:
+      return n == 1;
+   case 0x5:
+      return n == 0;
+   case 0x6:
+      return v == 1;
+   case 0x7:
+      return v == 0;
+   case 0x8:
+      return c == 1 && z == 0;
+   case 0x9:
+      return c == 0 || z == 1;
+   case 0xA:
+      return n == v;
+   case 0xB:
+      return n != v;
+   case 0xC:
+      return z == 0 && n == v;
+   case 0xD:
+      return z == 1 || n != v;
+   case 0xF:
+      return 0xF;
+   default:
+      return 1;
+   }
 }
 
 static int arm_execute_instruction(arm_core p) {
-    uint32_t ins;
-    int exception = arm_fetch(p, &ins);
-    if(exception != 0)
+   uint32_t ins;
+   int exception = arm_fetch(p, & ins);
+   if (exception != 0)
       return 1;
 
-    if(!condition_passed(p, ins))
+   if (!condition_passed(p, ins))
       return 1;
 
-    uint8_t opcode = get_bits(ins, 27, 25);
-    switch(opcode){
-      case 0x0:
-        if(get_bit(ins, 4)==0) {  
-            if(get_bits(ins, 24, 23) == 2 && get_bit(ins, 20) == 0) 
-              return arm_miscellaneous(p, ins);
-            else 
-              return arm_data_processing(p, ins);
-        } else { 
-            if(get_bit(ins, 7)==0){
-                if(get_bits(ins, 24, 23)==2 && get_bit(ins, 20)==1) 
-                  return arm_miscellaneous(p, ins);
-                else 
-                  return arm_data_processing(p, ins);
-            } else {                     
-                  return arm_load_store(p, ins);                                
-            }        
-        }
-        break;
-      case 0x1:
-        return arm_data_processing(p, ins);
+   uint8_t opcode = get_bits(ins, 27, 25);
+   switch (opcode) {
+   case 0x0:
+      if (get_bit(ins, 4) == 0) {
+         if (get_bits(ins, 24, 23) == 2 && get_bit(ins, 20) == 0)
+            return arm_miscellaneous(p, ins);
+         else
+            return arm_data_processing(p, ins);
+      } else {
+         if (get_bit(ins, 7) == 0) {
+            if (get_bits(ins, 24, 23) == 2 && get_bit(ins, 20) == 1)
+               return arm_miscellaneous(p, ins);
+            else
+               return arm_data_processing(p, ins);
+         } else {
+            return arm_load_store(p, ins);
+         }
+      }
+      break;
+   case 0x1:
+      return arm_data_processing(p, ins);
 
-      case 0x2:
-        return arm_load_store(p, ins);
+   case 0x2:
+      return arm_load_store(p, ins);
 
-      case 0x3:
-        if(get_bit(ins, 4)==0) {  
-          return arm_load_store(p, ins);
-        } else {
-          if(get_bits(ins, 24, 20)==0x1F && get_bits(ins, 7, 5)==0x07){ 
+   case 0x3:
+      if (get_bit(ins, 4) == 0) {
+         return arm_load_store(p, ins);
+      } else {
+         if (get_bits(ins, 24, 20) == 0x1F && get_bits(ins, 7, 5) == 0x07) {
             return UNDEFINED_INSTRUCTION;
-          } else { 
-
+         } else {
             return UNDEFINED_INSTRUCTION;
-          }
-        }
+         }
+      }
 
       case 0x4:
-        return arm_load_store_multiple(p, ins);
+         return arm_load_store_multiple(p, ins);
 
       case 0x5:
-        return arm_branch(p, ins);
+         return arm_branch(p, ins);
 
       case 0x6:
-        return arm_coprocessor_load_store(p, ins);
+         return arm_coprocessor_load_store(p, ins);
 
       case 0x7:
-        if(get_bit(ins,24)==0){
-          if(get_bit(ins,4)==0){ 
-            return arm_data_processing(p, ins);
-          } else { 
-            return UNDEFINED_INSTRUCTION;
-          }
-        } else {
-          return arm_coprocessor_others_swi(p, ins);
-        }
+         if (get_bit(ins, 24) == 0) {
+            if (get_bit(ins, 4) == 0) {
+               return arm_data_processing(p, ins);
+            } else {
+               return UNDEFINED_INSTRUCTION;
+            }
+         } else {
+            return arm_coprocessor_others_swi(p, ins);
+         }
 
       default:
-        return UNDEFINED_INSTRUCTION;
-    }
+          return UNDEFINED_INSTRUCTION;
+   }
 }
 
 int arm_step(arm_core p) {
-    int result;
+   int result;
 
-    result = arm_execute_instruction(p);
-    if (result)
-        arm_exception(p, result);
-    return result;
+   result = arm_execute_instruction(p);
+   if (result)
+      arm_exception(p, result);
+   return result;
 }
