@@ -74,26 +74,6 @@ int arm_coprocessor_others_swi(arm_core p, uint32_t ins) {
         	/* Here we implement the end of the simulation as swi 0x123456 */
 		if ((ins & 0xFFFFFF) == 0x123456)
 			exit(SOFTWARE_INTERRUPT);
-		else {
-			//ENTERING SUPERVISOR MODE
-			uint32_t cpsr_value = arm_read_register(p, CPSR);
-			uint32_t cpsr_new_value = set_bits(cpsr_value, 4, 0, 0b10011);
-			arm_write_register(p, CPSR, cpsr_new_value);
-			//LINKING
-			Link(p);
-			//SAVING CPSR
-			arm_write_register(p, SPSR, cpsr_value);
-			//CHANGING OTHER CPSR FIELDS
-			cpsr_new_value = clr_bit(cpsr_new_value, 5);
-			cpsr_new_value = set_bit(cpsr_new_value, 7);
-			//CP15 registers are not enabled yet, TODO :
-			//cpsr_new_value = (get_bit(CP15_reg1, 25)) ? set_bit(cpsr_new_value, 9) : clr_bit(cpsr_new_value, 9);
-			arm_write_register(p, CPSR, cpsr_new_value);
-			//CHANGING PC
-			//I consider high vectors are not configured
-			uint32_t br_addr = 0x00000008; //Otherwise, we'd do : uint32_t br_addr = (get_bit(CP15_reg1, 13)) ? 0xFFFF0008 : 0x00000008;
-			Branch(p, br_addr);
-		}
 		return SOFTWARE_INTERRUPT;
 	}
 	return UNDEFINED_INSTRUCTION;

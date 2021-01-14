@@ -101,21 +101,38 @@ static int arm_execute_instruction(arm_core p) {
       if (get_bit(ins, 4) == 0) {
          if (get_bits(ins, 24, 23) == 2 && get_bit(ins, 20) == 0)
             return arm_miscellaneous(p, ins);
-         else
+         else{
             return arm_data_processing(p, ins);
+         }
       } else {
          if (get_bit(ins, 7) == 0) {
             if (get_bits(ins, 24, 23) == 2 && get_bit(ins, 20) == 1)
                return arm_miscellaneous(p, ins);
-            else
+            else{
                return arm_data_processing(p, ins);
+            }
          } else {
             return arm_load_store(p, ins);
          }
       }
+      if (get_bits(ins, 24, 23) == 2 && get_bit(ins, 20) == 0){ // Instruction MRS
+         if (get_bit(ins, 20) == 1){
+            arm_write_register(p, get_bits(ins, 15, 12), arm_read_spsr(p));
+            return 0;
+         }
+         else{
+            arm_write_register(p, get_bits(ins, 15, 12), arm_read_cpsr(p));
+            return 0;
+         }
+      }
       break;
+
    case 0x1:
-      return arm_data_processing(p, ins);
+      if ((get_bits(ins, 24, 23) == 2) && (get_bits(ins, 21, 20)))
+         return arm_data_processing_immediate_msr(p, ins);
+      else {
+         return arm_data_processing(p, ins);
+      }
 
    case 0x2:
       return arm_load_store(p, ins);
