@@ -131,28 +131,28 @@ static int arm_execute_instruction(arm_core p) {
          }
       }
 
-      case 0x4:
-         return arm_load_store_multiple(p, ins);
+    case 0x4:
+       return arm_load_store_multiple(p, ins);
 
-      case 0x5:
-         return arm_branch(p, ins);
+    case 0x5:
+       return arm_branch(p, ins);
 
-      case 0x6:
-         return arm_coprocessor_load_store(p, ins);
+    case 0x6:
+       return arm_coprocessor_load_store(p, ins);
 
-      case 0x7:
-         if (get_bit(ins, 24) == 0) {
-            if (get_bit(ins, 4) == 0) {
-               return arm_data_processing(p, ins);
-            } else {
-               return UNDEFINED_INSTRUCTION;
-            }
-         } else {
-            return arm_coprocessor_others_swi(p, ins);
-         }
+    case 0x7:
+       if (get_bit(ins, 24) == 0) {
+          if (get_bit(ins, 4) == 0) {
+             return arm_data_processing(p, ins);
+          } else {
+             return UNDEFINED_INSTRUCTION;
+          }
+       } else {
+          return arm_coprocessor_others_swi(p, ins);
+       }
 
-      default:
-          return UNDEFINED_INSTRUCTION;
+    default:
+        return UNDEFINED_INSTRUCTION;
    }
 }
 
