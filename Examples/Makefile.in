@@ -92,6 +92,7 @@ POST_UNINSTALL = :
 @HAVE_ARM_COMPILER_TRUE@	example6$(EXEEXT) example7$(EXEEXT) \
 @HAVE_ARM_COMPILER_TRUE@	example8$(EXEEXT) example9$(EXEEXT) \
 @HAVE_ARM_COMPILER_TRUE@	example10$(EXEEXT) example11$(EXEEXT) \
+@HAVE_ARM_COMPILER_TRUE@	example12$(EXEEXT) \
 @HAVE_ARM_COMPILER_TRUE@	insertion_sort$(EXEEXT)
 subdir = Examples
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -113,6 +114,9 @@ example10_LDADD = $(LDADD)
 am_example11_OBJECTS = example11.$(OBJEXT)
 example11_OBJECTS = $(am_example11_OBJECTS)
 example11_LDADD = $(LDADD)
+am_example12_OBJECTS = example12.$(OBJEXT)
+example12_OBJECTS = $(am_example12_OBJECTS)
+example12_LDADD = $(LDADD)
 am_example2_OBJECTS = example2.$(OBJEXT)
 example2_OBJECTS = $(am_example2_OBJECTS)
 example2_LDADD = $(LDADD)
@@ -175,15 +179,15 @@ am__v_CCAS_ = $(am__v_CCAS_@AM_DEFAULT_V@)
 am__v_CCAS_0 = @echo "  CCAS    " $@;
 am__v_CCAS_1 = 
 SOURCES = $(example1_SOURCES) $(example10_SOURCES) \
-	$(example11_SOURCES) $(example2_SOURCES) $(example3_SOURCES) \
-	$(example4_SOURCES) $(example5_SOURCES) $(example6_SOURCES) \
-	$(example7_SOURCES) $(example8_SOURCES) $(example9_SOURCES) \
-	$(insertion_sort_SOURCES)
+	$(example11_SOURCES) $(example12_SOURCES) $(example2_SOURCES) \
+	$(example3_SOURCES) $(example4_SOURCES) $(example5_SOURCES) \
+	$(example6_SOURCES) $(example7_SOURCES) $(example8_SOURCES) \
+	$(example9_SOURCES) $(insertion_sort_SOURCES)
 DIST_SOURCES = $(example1_SOURCES) $(example10_SOURCES) \
-	$(example11_SOURCES) $(example2_SOURCES) $(example3_SOURCES) \
-	$(example4_SOURCES) $(example5_SOURCES) $(example6_SOURCES) \
-	$(example7_SOURCES) $(example8_SOURCES) $(example9_SOURCES) \
-	$(insertion_sort_SOURCES)
+	$(example11_SOURCES) $(example12_SOURCES) $(example2_SOURCES) \
+	$(example3_SOURCES) $(example4_SOURCES) $(example5_SOURCES) \
+	$(example6_SOURCES) $(example7_SOURCES) $(example8_SOURCES) \
+	$(example9_SOURCES) $(insertion_sort_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -321,6 +325,7 @@ example8_SOURCES = example8.s
 example9_SOURCES = example9.s
 example10_SOURCES = example10.s
 example11_SOURCES = example11.s
+example12_SOURCES = example12.s
 insertion_sort_SOURCES = insertion_sort.c
 EXTRA_DIST = linker_script
 all: all-am
@@ -371,6 +376,10 @@ example10$(EXEEXT): $(example10_OBJECTS) $(example10_DEPENDENCIES) $(EXTRA_examp
 example11$(EXEEXT): $(example11_OBJECTS) $(example11_DEPENDENCIES) $(EXTRA_example11_DEPENDENCIES) 
 	@rm -f example11$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(example11_OBJECTS) $(example11_LDADD) $(LIBS)
+
+example12$(EXEEXT): $(example12_OBJECTS) $(example12_DEPENDENCIES) $(EXTRA_example12_DEPENDENCIES) 
+	@rm -f example12$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(example12_OBJECTS) $(example12_LDADD) $(LIBS)
 
 example2$(EXEEXT): $(example2_OBJECTS) $(example2_DEPENDENCIES) $(EXTRA_example2_DEPENDENCIES) 
 	@rm -f example2$(EXEEXT)

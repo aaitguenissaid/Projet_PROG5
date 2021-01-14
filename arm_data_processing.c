@@ -196,22 +196,12 @@ void get_operand_carryout(arm_core p, uint32_t ins, uint32_t * shifter_operand, 
 }
 
 void update_flags_cpsr(arm_core p, int n, int z, int c, int v) {
-  /*	uint32_t val_cpsr = arm_read_cpsr(p);
-  	val_cpsr = N_Flag == 1 ? set_bit(val_cpsr, N) : clr_bit(val_cpsr, N);
-  	val_cpsr = Z_Flag == 1 ? set_bit(val_cpsr, Z) : clr_bit(val_cpsr, Z);
-  	val_cpsr = C_Flag == 1 ? set_bit(val_cpsr, C) : clr_bit(val_cpsr, C);
-  	val_cpsr = V_Flag == 1 ? set_bit(val_cpsr, V) : clr_bit(val_cpsr, V);
-  	arm_write_cpsr(p, val_cpsr);*/
-  uint32_t cpsr = arm_read_cpsr(p);
-  if (n != -1)
-    cpsr = (n == 1) ? set_bit(cpsr, N) : clr_bit(cpsr, N);
-  if (z != -1)
-    cpsr = (z == 1) ? set_bit(cpsr, Z) : clr_bit(cpsr, Z);
-  if (c != -1)
-    cpsr = (c == 1) ? set_bit(cpsr, C) : clr_bit(cpsr, C);
-  if (v != -1)
-    cpsr = (v == 1) ? set_bit(cpsr, V) : clr_bit(cpsr, V);
-  arm_write_cpsr(p, cpsr);
+  uint32_t val_cpsr = arm_read_cpsr(p);
+  val_cpsr = n == 1 ? set_bit(val_cpsr, N) : clr_bit(val_cpsr, N);
+  val_cpsr = z == 1 ? set_bit(val_cpsr, Z) : clr_bit(val_cpsr, Z);
+  val_cpsr = c == 1 ? set_bit(val_cpsr, C) : clr_bit(val_cpsr, C);
+  val_cpsr = v == 1 ? set_bit(val_cpsr, V) : clr_bit(val_cpsr, V);
+  arm_write_cpsr(p, val_cpsr);
 }
 
 uint32_t two_complement(uint32_t operand) {
@@ -435,10 +425,10 @@ int ins_SBC(arm_core p, uint32_t ins) {
       return 0; // UNPREDICTABLE
     }
   } else if (bit_S(ins) == 1) {
-    uint8_t N_Flag = get_bit(arm_read_register(p, get_rd(ins)), 31);
-    uint8_t Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
-    uint8_t C_Flag = ~borrow_from(arm_read_register(p, get_rn(ins)), shifter_operand + get_C_flag(p)) & 1;
-    uint8_t V_Flag = overflow_from(arm_read_register(p, get_rn(ins)), shifter_operand + get_C_flag(p), 2);
+    int N_Flag = get_bit(arm_read_register(p, get_rd(ins)), 31);
+    int Z_Flag = arm_read_register(p, get_rd(ins)) == 0 ? 1 : 0;
+    int C_Flag = ~borrow_from(arm_read_register(p, get_rn(ins)), shifter_operand + get_C_flag(p)) & 1;
+    int V_Flag = overflow_from(arm_read_register(p, get_rn(ins)), shifter_operand + get_C_flag(p), 2);
     update_flags_cpsr(p, N_Flag, Z_Flag, C_Flag, V_Flag);
   }
 

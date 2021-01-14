@@ -83,18 +83,18 @@ main:
     TEQ R2, R3      @ z = 1
     @Load Store
     LDR R0 , =word32 @LDR pseudo-instruction R0 = &word32
-    LDR R1 , [R0] @ R1 = *R0 (Mem read 4 bytes)
-    STR R1 , [R0] @ *R0=R1 (Mem write 4 bytes)
-    LDR R1 , [R0,#2] @ R1 = *(R0+2) (Mem read 4 bytes)
-    STR R1 , [R0,#2] @*(R0+2)=R1 (Mem write 4 bytes)
-    LDRB R1 , [R0] @  R1 = *R0 (Mem read 1 bytes)
-    STRB R1 , [R0] @  *R0=R1 (Mem write 1 bytes)
-    LDRB R1 , [R0,#2] @ R1 = *(R0+2) (Mem read 1 bytes)
-    STRB R1 , [R0,#2] @ *(R0+2)=R1 (Mem write 1 bytes)
-    LDRH R1 , [R0] @  R1 = *R0 (Mem read 2 bytes)
-    STRH R1 , [R0] @  *R0=R1 (Mem write 2 bytes)
-    LDRH R1 , [R0,#2] @ R1 = *(R0+2) (Mem read 2 bytes)
-    STRH R1 , [R0,#2] @ *(R0+2)=R1 (Mem write 2 bytes)
+    LDR R1 , [R0] @ R1 = *R0 = 0x11223344(Mem read 4 bytes)
+    STR R1 , [R0] @ *R0=R1 = 0x11223344(Mem write 4 bytes)
+    LDR R1 , [R0,#2] @ R1 = *(R0+2)= 0x33445566 (Mem read 4 bytes)
+    STR R1 , [R0,#2] @*(R0+2)=R1= 0x33445566 (Mem write 4 bytes)
+    LDRB R1 , [R0] @  R1 = *R0 =0x11 (Mem read 1 bytes)
+    STRB R1 , [R0] @  *R0=R1 =0x11(Mem write 1 bytes)
+    LDRB R1 , [R0,#2] @ R1 = *(R0+2)=0x33 (Mem read 1 bytes)
+    STRB R1 , [R0,#2] @ *(R0+2)=R1=0x33 (Mem write 1 bytes)
+    LDRH R1 , [R0] @  R1 = *R0 =0x1122(Mem read 2 bytes)
+    STRH R1 , [R0] @  *R0=R1 =0x1133(Mem write 2 bytes)
+    LDRH R1 , [R0,#2] @ R1 = *(R0+2)=0x3344 (Mem read 2 bytes)
+    STRH R1 , [R0,#2] @ *(R0+2)=R1=0x3344 (Mem write 2 bytes)
     LDR R0, =src  
     LDR R1, =dest
     LDM R0!, {R2-R4} @R2 = *(R0+0) (Mem read 4 bytes) R3 = *(R0+4) (Mem read 4 bytes) R4 = *(R0+8) (Mem read 4 bytes)
